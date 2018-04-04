@@ -31,6 +31,7 @@ include_directories(
  add_library(${PROJECT_NAME}
    src/SimpleExampleNetSimTracing.cpp
    src/ShowDistanceExampleNetSimTracing.cpp
+   src/MoveRobotsNetSimTracing.cpp
  )
 
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
