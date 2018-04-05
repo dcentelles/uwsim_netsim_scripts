@@ -38,6 +38,10 @@ void MoveRobotsNetSimTracing::ShowDistanceDev1(string path,
 void MoveRobotsNetSimTracing::Configure() {
   SetLogName("uwsim_netsim_scripts");
   LogToFile("netsim_log");
+  //FlushLogOn(cpplogging::info); //Not recommended
+
+  //For custom formatting of log messages: https://github.com/gabime/spdlog/wiki/3.-Custom-formatting
+  Log->set_pattern ("[%d %T:%f] %v");
 
   //---------------------------------------------------------------------
 
@@ -67,7 +71,7 @@ void MoveRobotsNetSimTracing::DoRun() {
       msg.twist.linear.x = baseVelocity;
 
       counter = 0;
-      while (counter < its) {
+      while (counter < its && ros::ok()) {
         bluerov2Pub.publish(msg);
         rate.sleep();
         counter += 1;
@@ -76,7 +80,7 @@ void MoveRobotsNetSimTracing::DoRun() {
       msg.twist.linear.x = -baseVelocity;
 
       counter = 0;
-      while (counter < its) {
+      while (counter < its && ros::ok()) {
         bluerov2Pub.publish(msg);
         rate.sleep();
         counter += 1;
