@@ -32,5 +32,6 @@ public:
   bool dev0PosValid = false, dev1PosValid = false;
   ros::NodeHandle node;
   ros::Publisher bluerov2Pub, bluerov2fPub;
+  dccomms::Timer showDistanceTimer;
 };
 }

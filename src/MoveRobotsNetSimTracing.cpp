@@ -9,6 +9,7 @@ MoveRobotsNetSimTracing::MoveRobotsNetSimTracing() : NetSimTracing() {
       "/bluerov2/velocityCommand", 1);
   bluerov2fPub = node.advertise<geometry_msgs::TwistStamped>(
       "/bluerov2_f/velocityCommand", 1);
+  showDistanceTimer.Reset();
 }
 
 void MoveRobotsNetSimTracing::ShowDistance(bool &lastPosValid,
@@ -19,9 +20,10 @@ void MoveRobotsNetSimTracing::ShowDistance(bool &lastPosValid,
                                            const tf::Vector3 &pos) {
   lastPos = pos;
   lastPosValid = true;
-  if (peerPosValid) {
+  if (peerPosValid) { // & showDistanceTimer.Elapsed() > 250) {
     double distance = lastPos.distance(peerPos);
     Info("DIST: {}", distance);
+    // showDistanceTimer.Reset();
   }
 }
 
