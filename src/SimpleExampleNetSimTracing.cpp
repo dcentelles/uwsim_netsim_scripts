@@ -36,7 +36,7 @@ void SimpleExampleNetSimTracing::Configure() {
     pkt->PeekHeader(header);
     tracing->Info("{}: (ID: {} ; MAC: {} ; Seq. Num. : {}) Transmitting packet "
                   "(USER SCRIPT)",
-                  header.GetSeqNum(), path, dev->GetDccommsId(), dev->GetMac());
+                  path, dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum());
   };
   ns3::Config::Connect("/ROSDeviceList/*/PacketTransmitting",
                        ns3::MakeCallback(txcb));
@@ -53,7 +53,7 @@ void SimpleExampleNetSimTracing::Configure() {
     tracing->Info(
         "{}: (ID: {} ; MAC: {} ; Seq. Num. : {}) Packet received from {} ({} "
         "bytes) (USER SCRIPT)",
-        header.GetSeqNum(), path, dev->GetDccommsId(), dev->GetMac(),
+        path, dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
         header.GetSrc(), header.GetPacketSize());
   };
   ns3::Config::Connect("/ROSDeviceList/*/PacketReceived",
@@ -61,40 +61,40 @@ void SimpleExampleNetSimTracing::Configure() {
 
   //---------------------------------------------------------------------
 
-  ROSCommsDevice::PacketCollisionCallback collisionCb =
-      [](std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt) {
+  ROSCommsDevice::PacketCollisionCallback collisionCb = [](
+      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt) {
 
-        // A packet has been marked corrupted by a collision. This packet could
-        // have  been marked corrupted by attenuation as well. So that the
-        // correct form to get total packets with errors is computing
-        // packets_sent - packets_received
+    // A packet has been marked corrupted by a collision. This packet could
+    // have  been marked corrupted by attenuation as well. So that the
+    // correct form to get total packets with errors is computing
+    // packets_sent - packets_received
 
-        NetsimHeader header;
-        pkt->PeekHeader(header);
-        tracing->Warn("{}: (ID: {} ; MAC: {} ; Seq. Num. : {}) Packet "
-                      "colisioned! {} ({} bytes) (USER SCRIPT)",
-                      header.GetSeqNum(), path, dev->GetDccommsId(),
-                      dev->GetMac(), header.GetSrc(), header.GetPacketSize());
-      };
+    NetsimHeader header;
+    pkt->PeekHeader(header);
+    tracing->Warn("{}: (ID: {} ; MAC: {} ; Seq. Num. : {}) Packet "
+                  "colisioned! {} ({} bytes) (USER SCRIPT)",
+                  path, dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
+                  header.GetSrc(), header.GetPacketSize());
+  };
   ns3::Config::Connect("/ROSDeviceList/*/PacketCollision",
                        ns3::MakeCallback(collisionCb));
 
   //---------------------------------------------------------------------
-  ROSCommsDevice::PacketPropagationErrorCallback propErrorCb =
-      [](std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt) {
+  ROSCommsDevice::PacketPropagationErrorCallback propErrorCb = [](
+      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt) {
 
-        // A packet has been marked corrupted by attenuation. This packet could
-        // have been marked collisioned as well. So that the correct form to
-        // get total packets with errors is computing packets_sent -
-        // packets_received
+    // A packet has been marked corrupted by attenuation. This packet could
+    // have been marked collisioned as well. So that the correct form to
+    // get total packets with errors is computing packets_sent -
+    // packets_received
 
-        NetsimHeader header;
-        pkt->PeekHeader(header);
-        tracing->Warn("{}: (ID: {} ; MAC: {} ; Seq. Num. : {}) Packet "
-                      "corrupted by propagation! {} ({} bytes) (USER SCRIPT)",
-                      header.GetSeqNum(), path, dev->GetDccommsId(),
-                      dev->GetMac(), header.GetSrc(), header.GetPacketSize());
-      };
+    NetsimHeader header;
+    pkt->PeekHeader(header);
+    tracing->Warn("{}: (ID: {} ; MAC: {} ; Seq. Num. : {}) Packet "
+                  "corrupted by propagation! {} ({} bytes) (USER SCRIPT)",
+                  path, dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
+                  header.GetSrc(), header.GetPacketSize());
+  };
   ns3::Config::Connect("/ROSDeviceList/*/PacketPropError",
                        ns3::MakeCallback(propErrorCb));
 

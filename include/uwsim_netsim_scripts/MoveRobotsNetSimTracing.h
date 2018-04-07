@@ -16,6 +16,15 @@ public:
                         const tf::Vector3 &pos);
   void ShowDistanceDev1(string path, ROSCommsDevicePtr dev,
                         const tf::Vector3 &pos);
+
+  void PacketTransmitting(
+      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt);
+  void PacketCollision(
+      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt);
+  void PacketPropError(
+      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt);
+  void PacketReceived(
+      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt);
   void Configure();
   void DoRun();
 
