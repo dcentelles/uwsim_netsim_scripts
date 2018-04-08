@@ -1,4 +1,5 @@
 #include <class_loader/multi_library_class_loader.h>
+#include <dccomms_ros/simulator/NetsimLogFormatter.h>
 #include <functional>
 #include <uwsim_netsim_scripts/MoveRobotsNetSimTracing.h>
 
@@ -86,7 +87,10 @@ void MoveRobotsNetSimTracing::Configure() {
 
   // For custom formatting of log messages:
   // https://github.com/gabime/spdlog/wiki/3.-Custom-formatting
-  Log->set_pattern("[%D %T.%F] %v");
+  // Log->set_pattern("[%D %T.%F] %v");
+  Log->set_formatter(
+      std::make_shared<NetsimLogFormatter>("%v"));
+  //Log->set_pattern("%v");
 
   //---------------------------------------------------------------------
 
