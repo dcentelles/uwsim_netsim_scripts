@@ -1,8 +1,7 @@
 #include <class_loader/multi_library_class_loader.h>
-#include <dccomms_ros/simulator/NetsimLogFormatter.h>
 #include <functional>
 #include <uwsim_netsim_scripts/MoveRobotsNetSimTracing.h>
-
+#include <dccomms_ros/simulator/NetsimLogFormatter.h>
 namespace uwsim_netstim {
 
 MoveRobotsNetSimTracing::MoveRobotsNetSimTracing() : NetSimTracing() {
@@ -82,17 +81,28 @@ void MoveRobotsNetSimTracing::PacketReceived(std::string path,
 
 void MoveRobotsNetSimTracing::Configure() {
   SetLogName("uwsim_netsim_scripts");
-  LogToFile("netsim_log");
-  // FlushLogOn(cpplogging::info); //Not recommended
 
-  // For custom formatting of log messages:
-  // https://github.com/gabime/spdlog/wiki/3.-Custom-formatting
-  // Log->set_pattern("[%D %T.%F] %v");
-  Log->set_formatter(
-      std::make_shared<NetsimLogFormatter>("%v"));
-  //Log->set_pattern("%v");
+  // Uncomment to sent all log messages to a file:
+  LogToFile("netsim_log");
+
+  // The logging is managed by a spdlog (https://github.com/gabime/spdlog)
+  // wrapper (https://github.com/dcentelles/cpplogging).
+  // By default, all log messages will be prefixed by the script time in seconds
+  // trying nanoseconds resolution (using the spdlog::formatter dccomms_ros::NetsimLogFormatter)
+  // Uncomment and customize the code below for adding more fields
+  // to the log message's prefix (https://github.com/gabime/spdlog/wiki/3.-Custom-formattingges):
+  //  SetLogFormatter(std::make_shared<NetsimLogFormatter>("[%D %T.%F] %v"));
+
+  // If you want to avoid showing the relative simulation time use
+  // the native spdlog::pattern_formatter instead:
+  //  SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%D %T.%F] %v"));
 
   //---------------------------------------------------------------------
+
+ // We recommend the callbacks to be very simple
+ // since the ns3 simulation time is stopped during the ns3 callback
+ // execution:
+ // https://www.nsnam.org/docs/manual/html/realtime.html
 
   ns3::Config::Connect(
       "/ROSDeviceList/0/CourseChange",
