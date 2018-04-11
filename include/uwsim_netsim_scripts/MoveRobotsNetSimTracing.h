@@ -1,6 +1,6 @@
-#include <uwsim/NetSim.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <ros/publisher.h>
+#include <uwsim/NetSim.h>
 
 namespace uwsim_netstim {
 
@@ -17,14 +17,14 @@ public:
   void ShowDistanceDev1(string path, ROSCommsDevicePtr dev,
                         const tf::Vector3 &pos);
 
-  void PacketTransmitting(
-      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt);
-  void PacketCollision(
-      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt);
-  void PacketPropError(
-      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt);
-  void PacketReceived(
-      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt);
+  void PacketTransmitting(std::string path, ROSCommsDevicePtr dev,
+                          ns3PacketPtr pkt);
+  void PacketError(std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt,
+                   bool propError, bool colError);
+  void PacketReceived(std::string path, ROSCommsDevicePtr dev,
+                      ns3PacketPtr pkt);
+
+  void TxFifoUpdated(std::string path, uint32_t oldValue, uint32_t newValue);
   void Configure();
   void DoRun();
 

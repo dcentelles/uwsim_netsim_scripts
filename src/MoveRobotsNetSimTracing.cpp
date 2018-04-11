@@ -1,7 +1,7 @@
 #include <class_loader/multi_library_class_loader.h>
+#include <dccomms_ros/simulator/NetsimLogFormatter.h>
 #include <functional>
 #include <uwsim_netsim_scripts/MoveRobotsNetSimTracing.h>
-#include <dccomms_ros/simulator/NetsimLogFormatter.h>
 namespace uwsim_netstim {
 
 MoveRobotsNetSimTracing::MoveRobotsNetSimTracing() : NetSimTracing() {
@@ -48,25 +48,34 @@ void MoveRobotsNetSimTracing::PacketTransmitting(std::string path,
        header.GetPacketSize());
 }
 
-void MoveRobotsNetSimTracing::PacketCollision(std::string path,
-                                              ROSCommsDevicePtr dev,
-                                              ns3PacketPtr pkt) {
-  NetsimHeader header;
-  pkt->PeekHeader(header);
-  Warn("[{}] COL -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
-       dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
-       header.GetPacketSize());
+void MoveRobotsNetSimTracing::TxFifoUpdated(std::string path, uint32_t oldValue,
+                                            uint32_t newValue) {
+  Info("[{}] TXFIFO {}", path, newValue);
 }
-
-void MoveRobotsNetSimTracing::PacketPropError(std::string path,
-                                              ROSCommsDevicePtr dev,
-                                              ns3PacketPtr pkt) {
+void MoveRobotsNetSimTracing::PacketError(std::string path,
+                                          ROSCommsDevicePtr dev,
+                                          ns3PacketPtr pkt, bool propErr,
+                                          bool colErr) {
 
   NetsimHeader header;
   pkt->PeekHeader(header);
-  Warn("[{}] PERR -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
-       dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
-       header.GetPacketSize());
+  if (propErr) {
+    if (!colErr) {
+      Warn("[{}] PERR -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
+           dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
+           header.GetPacketSize());
+    } else {
+
+      Warn("[{}] MERR -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
+           dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
+           header.GetPacketSize());
+    }
+  } else {
+
+    Warn("[{}] COL -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
+         dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
+         header.GetPacketSize());
+  }
 }
 
 void MoveRobotsNetSimTracing::PacketReceived(std::string path,
@@ -88,21 +97,24 @@ void MoveRobotsNetSimTracing::Configure() {
   // The logging is managed by a spdlog (https://github.com/gabime/spdlog)
   // wrapper (https://github.com/dcentelles/cpplogging).
   // By default, all log messages will be prefixed by the script time in seconds
-  // trying nanoseconds resolution (using the spdlog::formatter dccomms_ros::NetsimLogFormatter)
+  // trying nanoseconds resolution (using the spdlog::formatter
+  // dccomms_ros::NetsimLogFormatter)
   // Uncomment and customize the code below for adding more fields
-  // to the log message's prefix (https://github.com/gabime/spdlog/wiki/3.-Custom-formattingges):
+  // to the log message's prefix
+  // (https://github.com/gabime/spdlog/wiki/3.-Custom-formattingges):
   //  SetLogFormatter(std::make_shared<NetsimLogFormatter>("[%D %T.%F] %v"));
 
   // If you want to avoid showing the relative simulation time use
   // the native spdlog::pattern_formatter instead:
-  //  SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%D %T.%F] %v"));
+  //  SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%D %T.%F]
+  //  %v"));
 
   //---------------------------------------------------------------------
 
- // We recommend the callbacks to be very simple
- // since the ns3 simulation time is stopped during the ns3 callback
- // execution:
- // https://www.nsnam.org/docs/manual/html/realtime.html
+  // We recommend the callbacks to be very simple
+  // since the ns3 simulation time is stopped during the ns3 callback
+  // execution:
+  // https://www.nsnam.org/docs/manual/html/realtime.html
 
   ns3::Config::Connect(
       "/ROSDeviceList/0/CourseChange",
@@ -112,12 +124,8 @@ void MoveRobotsNetSimTracing::Configure() {
       ns3::MakeCallback(&MoveRobotsNetSimTracing::ShowDistanceDev1, this));
 
   ns3::Config::Connect(
-      "/ROSDeviceList/*/PacketCollision",
-      ns3::MakeCallback(&MoveRobotsNetSimTracing::PacketCollision, this));
-
-  ns3::Config::Connect(
-      "/ROSDeviceList/*/PacketPropError",
-      ns3::MakeCallback(&MoveRobotsNetSimTracing::PacketPropError, this));
+      "/ROSDeviceList/*/PacketError",
+      ns3::MakeCallback(&MoveRobotsNetSimTracing::PacketError, this));
 
   ns3::Config::Connect(
       "/ROSDeviceList/*/PacketReceived",
@@ -126,6 +134,10 @@ void MoveRobotsNetSimTracing::Configure() {
   ns3::Config::Connect(
       "/ROSDeviceList/*/PacketTransmitting",
       ns3::MakeCallback(&MoveRobotsNetSimTracing::PacketTransmitting, this));
+
+  ns3::Config::Connect(
+      "/ROSDeviceList/*/TxFifoSize",
+      ns3::MakeCallback(&MoveRobotsNetSimTracing::TxFifoUpdated, this));
 }
 
 void MoveRobotsNetSimTracing::DoRun() {

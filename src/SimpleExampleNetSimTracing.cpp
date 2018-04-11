@@ -85,38 +85,13 @@ void SimpleExampleNetSimTracing::Configure() {
                        ns3::MakeCallback(rxcb));
 
   //---------------------------------------------------------------------
-
-  ROSCommsDevice::PacketCollisionCallback collisionCb = [](
-      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt) {
-
-    // A packet has been marked corrupted by a collision. This packet could
-    // have  been marked corrupted by attenuation as well. So that the
-    // correct form to get total packets with errors is computing
-    // packets_sent - packets_received
+  ROSCommsDevice::PacketErrorCallback propErrorCb = [](
+      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt, bool propError, bool colError) {
 
     NetsimHeader header;
     pkt->PeekHeader(header);
     tracing->Warn("{}: (ID: {} ; MAC: {} ; Seq. Num. : {}) Packet "
-                  "colisioned! {} ({} bytes) (USER SCRIPT)",
-                  path, dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
-                  header.GetSrc(), header.GetPacketSize());
-  };
-  ns3::Config::Connect("/ROSDeviceList/*/PacketCollision",
-                       ns3::MakeCallback(collisionCb));
-
-  //---------------------------------------------------------------------
-  ROSCommsDevice::PacketPropagationErrorCallback propErrorCb = [](
-      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt) {
-
-    // A packet has been marked corrupted by attenuation. This packet could
-    // have been marked collisioned as well. So that the correct form to
-    // get total packets with errors is computing packets_sent -
-    // packets_received
-
-    NetsimHeader header;
-    pkt->PeekHeader(header);
-    tracing->Warn("{}: (ID: {} ; MAC: {} ; Seq. Num. : {}) Packet "
-                  "corrupted by propagation! {} ({} bytes) (USER SCRIPT)",
+                  "corrupted! {} ({} bytes) (USER SCRIPT)",
                   path, dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
                   header.GetSrc(), header.GetPacketSize());
   };
