@@ -25,6 +25,7 @@ public:
                       ns3PacketPtr pkt);
 
   void TxFifoUpdated(std::string path, uint32_t oldValue, uint32_t newValue);
+  void PacketDropsUpdated(std::string path, uint32_t oldValue, uint32_t newValue);
   void Configure();
   void DoRun();
 

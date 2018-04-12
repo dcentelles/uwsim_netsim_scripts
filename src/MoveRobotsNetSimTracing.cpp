@@ -47,11 +47,17 @@ void MoveRobotsNetSimTracing::PacketTransmitting(std::string path,
        dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
        header.GetPacketSize());
 }
+void MoveRobotsNetSimTracing::PacketDropsUpdated(std::string path,
+                                                 uint32_t oldValue,
+                                                 uint32_t newValue) {
+  Info("[{}] PKTDROPS {}", path, newValue);
+}
 
 void MoveRobotsNetSimTracing::TxFifoUpdated(std::string path, uint32_t oldValue,
                                             uint32_t newValue) {
   Info("[{}] TXFIFO {}", path, newValue);
 }
+
 void MoveRobotsNetSimTracing::PacketError(std::string path,
                                           ROSCommsDevicePtr dev,
                                           ns3PacketPtr pkt, bool propErr,
@@ -138,6 +144,10 @@ void MoveRobotsNetSimTracing::Configure() {
   ns3::Config::Connect(
       "/ROSDeviceList/*/TxFifoSize",
       ns3::MakeCallback(&MoveRobotsNetSimTracing::TxFifoUpdated, this));
+
+  ns3::Config::Connect(
+      "/ROSDeviceList/*/TxPacketDrops",
+      ns3::MakeCallback(&MoveRobotsNetSimTracing::PacketDropsUpdated, this));
 }
 
 void MoveRobotsNetSimTracing::DoRun() {
