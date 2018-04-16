@@ -99,6 +99,7 @@ void MoveRobotsNetSimTracing::Configure() {
 
   // Uncomment to sent all log messages to a file:
   LogToFile("netsim_log");
+  //LogToConsole(true);
 
   // The logging is managed by a spdlog (https://github.com/gabime/spdlog)
   // wrapper (https://github.com/dcentelles/cpplogging).

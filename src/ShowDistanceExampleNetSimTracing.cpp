@@ -32,25 +32,29 @@ void ShowDistanceExampleNetSimTracing::Configure() {
 
   // Uncomment to sent all log messages to a file:
   LogToFile("netsim_log");
+  //LogToConsole(true);
 
   // The logging is managed by a spdlog (https://github.com/gabime/spdlog)
   // wrapper (https://github.com/dcentelles/cpplogging).
   // By default, all log messages will be prefixed by the script time in seconds
-  // trying nanoseconds resolution (using the spdlog::formatter dccomms_ros::NetsimLogFormatter)
+  // trying nanoseconds resolution (using the spdlog::formatter
+  // dccomms_ros::NetsimLogFormatter)
   // Uncomment and customize the code below for adding more fields
-  // to the log message's prefix (https://github.com/gabime/spdlog/wiki/3.-Custom-formattingges):
+  // to the log message's prefix
+  // (https://github.com/gabime/spdlog/wiki/3.-Custom-formattingges):
   //  SetLogFormatter(std::make_shared<NetsimLogFormatter>("[%D %T.%F] %v"));
 
   // If you want to avoid showing the relative simulation time use
   // the native spdlog::pattern_formatter instead:
-  //  SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%D %T.%F] %v"));
+  //  SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%D %T.%F]
+  //  %v"));
 
   //---------------------------------------------------------------------
 
- // We recommend the callbacks to be very simple
- // since the ns3 simulation time is stopped during the ns3 callback
- // execution:
- // https://www.nsnam.org/docs/manual/html/realtime.html
+  // We recommend the callbacks to be very simple
+  // since the ns3 simulation time is stopped during the ns3 callback
+  // execution:
+  // https://www.nsnam.org/docs/manual/html/realtime.html
 
   ns3::Config::Connect(
       "/ROSDeviceList/0/CourseChange",

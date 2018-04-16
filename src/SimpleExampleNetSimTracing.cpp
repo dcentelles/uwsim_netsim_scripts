@@ -10,6 +10,7 @@ void SimpleExampleNetSimTracing::Configure() {
 
   // Uncomment to sent all log messages to a file:
   LogToFile("netsim_log");
+  //LogToConsole(true);
 
   // The logging is managed by a spdlog (https://github.com/gabime/spdlog)
   // wrapper (https://github.com/dcentelles/cpplogging).
@@ -86,7 +87,8 @@ void SimpleExampleNetSimTracing::Configure() {
 
   //---------------------------------------------------------------------
   ROSCommsDevice::PacketErrorCallback propErrorCb = [](
-      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt, bool propError, bool colError) {
+      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt, bool propError,
+      bool colError) {
 
     NetsimHeader header;
     pkt->PeekHeader(header);
