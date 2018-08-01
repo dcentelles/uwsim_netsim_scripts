@@ -99,7 +99,7 @@ void MoveRobotsNetSimTracing::Configure() {
 
   // Uncomment to sent all log messages to a file:
   LogToFile("netsim_log");
-  //LogToConsole(true);
+  // LogToConsole(true);
 
   // The logging is managed by a spdlog (https://github.com/gabime/spdlog)
   // wrapper (https://github.com/dcentelles/cpplogging).
@@ -166,6 +166,7 @@ void MoveRobotsNetSimTracing::DoRun() {
 
     ros::Rate rate(20);
     while (ros::ok()) {
+      std::this_thread::sleep_for(10s);
       msg.twist.linear.x = baseVelocity;
 
       counter = 0;

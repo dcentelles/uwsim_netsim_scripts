@@ -33,6 +33,7 @@ include_directories(
    src/ShowDistanceExampleNetSimTracing.cpp
    src/MoveRobotsNetSimTracing.cpp
    src/StaticRobotsNetSimTracing.cpp
+   src/ArdusubTest0.cpp
  )
 
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
