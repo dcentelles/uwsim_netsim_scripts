@@ -97,10 +97,6 @@ void MoveRobotsNetSimTracing::PacketReceived(std::string path,
 void MoveRobotsNetSimTracing::Configure() {
   SetLogName("uwsim_netsim_scripts");
 
-  // Uncomment to sent all log messages to a file:
-  LogToFile("netsim_log");
-  // LogToConsole(true);
-
   // The logging is managed by a spdlog (https://github.com/gabime/spdlog)
   // wrapper (https://github.com/dcentelles/cpplogging).
   // By default, all log messages will be prefixed by the script time in seconds
