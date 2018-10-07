@@ -50,7 +50,7 @@ void MoveRobotsNetSimTracing::PacketTransmitting(std::string path,
 void MoveRobotsNetSimTracing::PacketDropsUpdated(std::string path,
                                                  uint32_t oldValue,
                                                  uint32_t newValue) {
-  Info("[{}] PKTDROPS {}", path, newValue);
+  Warn("[{}] PKTDROPS {}", path, newValue);
 }
 
 void MoveRobotsNetSimTracing::TxFifoUpdated(std::string path, uint32_t oldValue,
@@ -109,8 +109,7 @@ void MoveRobotsNetSimTracing::Configure() {
 
   // If you want to avoid showing the relative simulation time use
   // the native spdlog::pattern_formatter instead:
-  //  SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%D %T.%F]
-  //  %v"));
+   SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%D %T.%F] %v"));
 
   //---------------------------------------------------------------------
 
@@ -158,16 +157,21 @@ void MoveRobotsNetSimTracing::DoRun() {
     msg.twist.angular.z = 0;
 
     double baseVelocity = 0.1;
-    int counter, its = 1000;
+    double r = 20;
+    double itt = 1. / r;
+    double range = 7.6; //meters
 
-    ros::Rate rate(20);
+    ros::Rate rate(r);
+
+    int counter, its = range / (itt * baseVelocity);
+
     while (ros::ok()) {
       std::this_thread::sleep_for(10s);
       msg.twist.linear.x = baseVelocity;
 
       counter = 0;
       while (counter < its && ros::ok()) {
-        bluerov2Pub.publish(msg);
+        //bluerov2Pub.publish(msg);
         rate.sleep();
         counter += 1;
       }
@@ -176,7 +180,7 @@ void MoveRobotsNetSimTracing::DoRun() {
 
       counter = 0;
       while (counter < its && ros::ok()) {
-        bluerov2Pub.publish(msg);
+        //bluerov2Pub.publish(msg);
         rate.sleep();
         counter += 1;
       }
