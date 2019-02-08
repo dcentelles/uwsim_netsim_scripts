@@ -26,7 +26,7 @@ ShipwreckNetSimTracing::ShipwreckNetSimTracing() : NetSimTracing() {
 
 void ShipwreckNetSimTracing::PacketTransmitting(std::string path,
                                                 ROSCommsDevicePtr dev,
-                                                ns3PacketPtr pkt) {
+                                                ns3ConstPacketPtr pkt) {
   NetsimHeader header;
   pkt->PeekHeader(header);
   Info("[{}] TX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
@@ -61,7 +61,7 @@ void ShipwreckNetSimTracing::TxFifoUpdated(std::string path, uint32_t oldValue,
 
 void ShipwreckNetSimTracing::PacketError(std::string path,
                                          ROSCommsDevicePtr dev,
-                                         ns3PacketPtr pkt, bool propErr,
+                                         ns3ConstPacketPtr pkt, bool propErr,
                                          bool colErr) {
 
   NetsimHeader header;
@@ -87,7 +87,7 @@ void ShipwreckNetSimTracing::PacketError(std::string path,
 
 void ShipwreckNetSimTracing::PacketReceived(std::string path,
                                             ROSCommsDevicePtr dev,
-                                            ns3PacketPtr pkt) {
+                                            ns3ConstPacketPtr pkt) {
   NetsimHeader header;
   pkt->PeekHeader(header);
   Info("[{}] RX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
@@ -108,6 +108,22 @@ void ShipwreckNetSimTracing::PacketReceived(std::string path,
     bluerov2_rled_pub.publish(ledmsg);
     break;
   }
+}
+
+void ShipwreckNetSimTracing::MacRx(std::string path, ROSCommsDevicePtr dev,
+                                   ns3ConstPacketPtr pkt) {
+  AquaSimHeader header;
+  pkt->PeekHeader(header);
+  Info("[{}] MAC RX -- ID: {} ; MAC: {} ; Size: {}", path, dev->GetDccommsId(),
+       dev->GetMac(), header.GetSize());
+}
+
+void ShipwreckNetSimTracing::MacTx(std::string path, ROSCommsDevicePtr dev,
+                                   ns3ConstPacketPtr pkt) {
+  AquaSimHeader header;
+  pkt->PeekHeader(header);
+  Info("[{}] MAC TX -- ID: {} ; MAC: {} ; Size: {}", path, dev->GetDccommsId(),
+       dev->GetMac(), header.GetSize());
 }
 
 void ShipwreckNetSimTracing::Configure() {
@@ -155,6 +171,12 @@ void ShipwreckNetSimTracing::Configure() {
   ns3::Config::Connect(
       "/ROSDeviceList/*/TxPacketDrops",
       ns3::MakeCallback(&ShipwreckNetSimTracing::PacketDropsUpdated, this));
+
+  ns3::Config::Connect("/ROSDeviceList/*/MacTx",
+                       ns3::MakeCallback(&ShipwreckNetSimTracing::MacTx, this));
+
+  ns3::Config::Connect("/ROSDeviceList/*/MacRx",
+                       ns3::MakeCallback(&ShipwreckNetSimTracing::MacRx, this));
 }
 
 void ShipwreckNetSimTracing::DoRun() {

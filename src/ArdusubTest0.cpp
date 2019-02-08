@@ -34,7 +34,7 @@ void ArdusubTest0::ShowDistanceDev1(string path, ROSCommsDevicePtr dev,
 }
 
 void ArdusubTest0::PacketTransmitting(std::string path, ROSCommsDevicePtr dev,
-                                      ns3PacketPtr pkt) {
+                                      ns3ConstPacketPtr pkt) {
   NetsimHeader header;
   pkt->PeekHeader(header);
   Info("[{}] TX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
@@ -52,7 +52,8 @@ void ArdusubTest0::TxFifoUpdated(std::string path, uint32_t oldValue,
 }
 
 void ArdusubTest0::PacketError(std::string path, ROSCommsDevicePtr dev,
-                               ns3PacketPtr pkt, bool propErr, bool colErr) {
+                               ns3ConstPacketPtr pkt, bool propErr,
+                               bool colErr) {
 
   NetsimHeader header;
   pkt->PeekHeader(header);
@@ -76,12 +77,28 @@ void ArdusubTest0::PacketError(std::string path, ROSCommsDevicePtr dev,
 }
 
 void ArdusubTest0::PacketReceived(std::string path, ROSCommsDevicePtr dev,
-                                  ns3PacketPtr pkt) {
+                                  ns3ConstPacketPtr pkt) {
   NetsimHeader header;
   pkt->PeekHeader(header);
   Info("[{}] RX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
        dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
        header.GetPacketSize());
+}
+
+void ArdusubTest0::MacRx(std::string path, ROSCommsDevicePtr dev,
+                         ns3ConstPacketPtr pkt) {
+  AquaSimHeader header;
+  pkt->PeekHeader(header);
+  Info("[{}] MAC RX -- ID: {} ; MAC: {} ; Size: {}", path, dev->GetDccommsId(),
+       dev->GetMac(), header.GetSize());
+}
+
+void ArdusubTest0::MacTx(std::string path, ROSCommsDevicePtr dev,
+                         ns3ConstPacketPtr pkt) {
+    AquaSimHeader header;
+    pkt->PeekHeader(header);
+    Info("[{}] MAC TX -- ID: {} ; MAC: {} ; Size: {}", path, dev->GetDccommsId(),
+         dev->GetMac(), header.GetSize());
 }
 
 void ArdusubTest0::Configure() {
@@ -99,7 +116,8 @@ void ArdusubTest0::Configure() {
 
   // If you want to avoid showing the relative simulation time use
   // the native spdlog::pattern_formatter instead:
-  // SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%D %T.%F] %v"));
+  // SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%D %T.%F]
+  // %v"));
   SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%T.%F] %v"));
 
   //---------------------------------------------------------------------
@@ -109,32 +127,35 @@ void ArdusubTest0::Configure() {
   // execution:
   // https://www.nsnam.org/docs/manual/html/realtime.html
 
-//  ns3::Config::Connect(
-//      "/ROSDeviceList/0/CourseChange",
-//      ns3::MakeCallback(&ArdusubTest0::ShowDistanceDev0, this));
-//  ns3::Config::Connect(
-//      "/ROSDeviceList/1/CourseChange",
-//      ns3::MakeCallback(&ArdusubTest0::ShowDistanceDev1, this));
+  //  ns3::Config::Connect(
+  //      "/ROSDeviceList/0/CourseChange",
+  //      ns3::MakeCallback(&ArdusubTest0::ShowDistanceDev0, this));
+  //  ns3::Config::Connect(
+  //      "/ROSDeviceList/1/CourseChange",
+  //      ns3::MakeCallback(&ArdusubTest0::ShowDistanceDev1, this));
 
-  ns3::Config::Connect(
-      "/ROSDeviceList/*/PacketError",
-      ns3::MakeCallback(&ArdusubTest0::PacketError, this));
+  ns3::Config::Connect("/ROSDeviceList/*/PacketError",
+                       ns3::MakeCallback(&ArdusubTest0::PacketError, this));
 
-  ns3::Config::Connect(
-      "/ROSDeviceList/*/PacketReceived",
-      ns3::MakeCallback(&ArdusubTest0::PacketReceived, this));
+  ns3::Config::Connect("/ROSDeviceList/*/PacketReceived",
+                       ns3::MakeCallback(&ArdusubTest0::PacketReceived, this));
 
   ns3::Config::Connect(
       "/ROSDeviceList/*/PacketTransmitting",
       ns3::MakeCallback(&ArdusubTest0::PacketTransmitting, this));
 
-  ns3::Config::Connect(
-      "/ROSDeviceList/*/TxFifoSize",
-      ns3::MakeCallback(&ArdusubTest0::TxFifoUpdated, this));
+  ns3::Config::Connect("/ROSDeviceList/*/TxFifoSize",
+                       ns3::MakeCallback(&ArdusubTest0::TxFifoUpdated, this));
 
   ns3::Config::Connect(
       "/ROSDeviceList/*/TxPacketDrops",
       ns3::MakeCallback(&ArdusubTest0::PacketDropsUpdated, this));
+
+  ns3::Config::Connect("/ROSDeviceList/*/MacTx",
+                       ns3::MakeCallback(&ArdusubTest0::MacTx, this));
+
+  ns3::Config::Connect("/ROSDeviceList/*/MacRx",
+                       ns3::MakeCallback(&ArdusubTest0::MacRx, this));
 }
 
 void ArdusubTest0::DoRun() {
@@ -158,4 +179,4 @@ void ArdusubTest0::DoRun() {
 }
 
 CLASS_LOADER_REGISTER_CLASS(ArdusubTest0, NetSimTracing)
-}
+} // namespace uwsim_netstim

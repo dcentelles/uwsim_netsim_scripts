@@ -17,11 +17,16 @@ public:
                         const tf::Vector3 &pos);
 
   void PacketTransmitting(std::string path, ROSCommsDevicePtr dev,
-                          ns3PacketPtr pkt);
-  void PacketError(std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt,
+                          ns3ConstPacketPtr pkt);
+  void PacketError(std::string path, ROSCommsDevicePtr dev, ns3ConstPacketPtr pkt,
                    bool propError, bool colError);
   void PacketReceived(std::string path, ROSCommsDevicePtr dev,
-                      ns3PacketPtr pkt);
+                      ns3ConstPacketPtr pkt);
+
+  void MacRx(std::string path, ROSCommsDevicePtr dev,
+                      ns3ConstPacketPtr pkt);
+  void MacTx(std::string path, ROSCommsDevicePtr dev,
+                      ns3ConstPacketPtr pkt);
 
   void TxFifoUpdated(std::string path, uint32_t oldValue, uint32_t newValue);
   void PacketDropsUpdated(std::string path, uint32_t oldValue, uint32_t newValue);

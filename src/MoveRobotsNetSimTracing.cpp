@@ -40,7 +40,7 @@ void MoveRobotsNetSimTracing::ShowDistanceDev1(string path,
 
 void MoveRobotsNetSimTracing::PacketTransmitting(std::string path,
                                                  ROSCommsDevicePtr dev,
-                                                 ns3PacketPtr pkt) {
+                                                 ns3ConstPacketPtr pkt) {
   NetsimHeader header;
   pkt->PeekHeader(header);
   Info("[{}] TX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
@@ -60,7 +60,7 @@ void MoveRobotsNetSimTracing::TxFifoUpdated(std::string path, uint32_t oldValue,
 
 void MoveRobotsNetSimTracing::PacketError(std::string path,
                                           ROSCommsDevicePtr dev,
-                                          ns3PacketPtr pkt, bool propErr,
+                                          ns3ConstPacketPtr pkt, bool propErr,
                                           bool colErr) {
 
   NetsimHeader header;
@@ -86,7 +86,7 @@ void MoveRobotsNetSimTracing::PacketError(std::string path,
 
 void MoveRobotsNetSimTracing::PacketReceived(std::string path,
                                              ROSCommsDevicePtr dev,
-                                             ns3PacketPtr pkt) {
+                                             ns3ConstPacketPtr pkt) {
   NetsimHeader header;
   pkt->PeekHeader(header);
   Info("[{}] RX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,

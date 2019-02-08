@@ -50,7 +50,7 @@ void SimpleExampleNetSimTracing::Configure() {
   //---------------------------------------------------------------------
 
   ROSCommsDevice::PacketTransmittingCallback txcb = [](
-      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt) {
+      std::string path, ROSCommsDevicePtr dev, ns3ConstPacketPtr pkt) {
 
     // A packet is being transmitted
 
@@ -66,7 +66,7 @@ void SimpleExampleNetSimTracing::Configure() {
   //---------------------------------------------------------------------
 
   ROSCommsDevice::PacketReceivedCallback rxcb = [](
-      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt) {
+      std::string path, ROSCommsDevicePtr dev, ns3ConstPacketPtr pkt) {
 
     // A packet has been completely received
 
@@ -83,7 +83,7 @@ void SimpleExampleNetSimTracing::Configure() {
 
   //---------------------------------------------------------------------
   ROSCommsDevice::PacketErrorCallback propErrorCb = [](
-      std::string path, ROSCommsDevicePtr dev, ns3PacketPtr pkt, bool propError,
+      std::string path, ROSCommsDevicePtr dev, ns3ConstPacketPtr pkt, bool propError,
       bool colError) {
 
     NetsimHeader header;
