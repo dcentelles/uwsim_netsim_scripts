@@ -21,6 +21,10 @@ public:
   void PacketDropsUpdated(std::string path, uint32_t oldValue,
                           uint32_t newValue);
 
+  void MacTxFifoUpdated(std::string path, uint32_t oldValue, uint32_t newValue);
+  void MacPacketDropsUpdated(std::string path, uint32_t oldValue,
+                          uint32_t newValue);
+
   void MacRx(std::string path, ROSCommsDevicePtr dev,
                       ns3ConstPacketPtr pkt);
   void MacTx(std::string path, ROSCommsDevicePtr dev,

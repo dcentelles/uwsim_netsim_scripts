@@ -59,6 +59,17 @@ void ShipwreckNetSimTracing::TxFifoUpdated(std::string path, uint32_t oldValue,
   Info("[{}] TXFIFO {}", path, newValue);
 }
 
+void ShipwreckNetSimTracing::MacPacketDropsUpdated(std::string path,
+                                                uint32_t oldValue,
+                                                uint32_t newValue) {
+  Info("[{}] MAC PKTDROPS {}", path, newValue);
+}
+
+void ShipwreckNetSimTracing::MacTxFifoUpdated(std::string path, uint32_t oldValue,
+                                           uint32_t newValue) {
+  Info("[{}] MAC TXFIFO {}", path, newValue);
+}
+
 void ShipwreckNetSimTracing::PacketError(std::string path,
                                          ROSCommsDevicePtr dev,
                                          ns3ConstPacketPtr pkt, bool propErr,
@@ -143,7 +154,7 @@ void ShipwreckNetSimTracing::Configure() {
   // the native spdlog::pattern_formatter instead:
   // SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%D %T.%F]
   // %v"));
-  SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%T.%F] %v"));
+  SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("%D %T.%F %v"));
 
   //---------------------------------------------------------------------
 
@@ -177,6 +188,12 @@ void ShipwreckNetSimTracing::Configure() {
 
   ns3::Config::Connect("/ROSDeviceList/*/MacRx",
                        ns3::MakeCallback(&ShipwreckNetSimTracing::MacRx, this));
+
+  ns3::Config::Connect("/NodeList/*/DeviceList/0/Mac/TxFifoSize",
+                       ns3::MakeCallback(&ShipwreckNetSimTracing::MacTxFifoUpdated, this));
+
+  ns3::Config::Connect("/NodeList/*/DeviceList/0/Mac/TxPacketDrops",
+                       ns3::MakeCallback(&ShipwreckNetSimTracing::MacPacketDropsUpdated, this));
 }
 
 void ShipwreckNetSimTracing::DoRun() {
