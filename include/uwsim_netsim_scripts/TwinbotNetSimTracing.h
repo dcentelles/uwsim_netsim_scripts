@@ -40,12 +40,13 @@ public:
   ros::NodeHandle node;
   underwater_sensor_msgs::LedLight ledmsg;
   ros::Publisher leader_pub, follower_pub, support_pub;
-  ros::Subscriber leader_sub, follower_sub, support_sub;
-  nav_msgs::Odometry leader_odom, follower_odom, support_odom;
+  // ros::Subscriber leader_sub, follower_sub, support_sub;
+  // nav_msgs::Odometry leader_odom, follower_odom, support_odom;
 
   struct PIDStatus {};
   PIDStatus leader_pid, follower_pid, support_pid;
   int freq;
   double GetLinearVel(const double &diff);
+  double GetAngularVel(const double &diff);
 };
 } // namespace uwsim_netstim
