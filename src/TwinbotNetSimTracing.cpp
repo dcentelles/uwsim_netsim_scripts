@@ -185,18 +185,22 @@ void TwinbotNetSimTracing::Configure() {
   freq = 10;
 }
 
-double TwinbotNetSimTracing::GetLinearVel(const double &diff) {
-  return diff * 0.1;
-  //  double vel = 0.5;
-  //  double v;
-  //  if (std::abs(diff) > 2) {
-  //    v = vel;
-  //    if (diff < 0) {
-  //      v = -1 * v;
-  //    }
-  //  } else {
-  //    v = diff * 0.5;
-  //  }
+void TwinbotNetSimTracing::GetLinearVel(const double &diffx,
+                                        const double &diffy,
+                                        const double &diffz, double &vx,
+                                        double &vy, double &vz) {
+  double kp = 0.1;
+  double kp2 = 0.03;
+  vx = diffx * kp;
+  vy = diffy * kp;
+  vz = diffz * kp;
+
+  double mod = std::sqrt(vx * vx + vy * vy + vz * vz);
+  if (mod > 0.5) {
+    vx = diffx * kp2;
+    vy = diffy * kp2;
+    vz = diffz * kp2;
+  }
 }
 
 double TwinbotNetSimTracing::GetAngularVel(const double &diff) {
@@ -212,7 +216,7 @@ void TwinbotNetSimTracing::DoRun() {
     double tlroll = -1.0775e-15, tlpich = -2.94342e-15, tlyaw = 2.59545;
 
     double lxorig = -13.6125, lyorig = -10.7632, lzorig = 0.371301,
-           lyaworig = 0; // 1.706;
+           lyaworig = 1.706;
 
     geometry_msgs::TwistStamped f_msg, l_msg, s_msg;
     tf::TransformListener listener;
@@ -220,7 +224,7 @@ void TwinbotNetSimTracing::DoRun() {
     ros::Rate rate(freq);
 
     tf::Transform wMlp, lMlp;
-    tf::StampedTransform wMl, wMf, lMfp, wMfp, fMfp;
+    tf::StampedTransform wMl, wMf, lMfp, wMfp, fMfp, lMf;
 
     // GET wMlp and wMfp
     wMlp.setOrigin(tf::Vector3(tlx, tly, tlz));
@@ -231,15 +235,6 @@ void TwinbotNetSimTracing::DoRun() {
 
     tf::Transform lpMfp;
     lpMfp = wMlp.inverse() * wMfp;
-
-    //    tf::Vector3 lpTlf = wMlp.getOrigin() - wMfp.getOrigin();
-    //    // tf::Vector3 lpTlf2 = wMfp.getOrigin() - wMlp.getOrigin();
-    //    tf::Quaternion lpRlf = wMlp.getRotation() - wMfp.getRotation();
-    // lpRlf = lpRlf.getIdentity();
-    //   lpRlf.normalize();
-
-    // tf::Transform NRot;
-    // tmp.setRotation(wMlp.getRotation());
 
     static tf2_ros::StaticTransformBroadcaster static_broadcaster;
     geometry_msgs::TransformStamped static_transformStamped;
@@ -255,21 +250,11 @@ void TwinbotNetSimTracing::DoRun() {
     static_transformStamped.transform.rotation.z = lpMfp.getRotation().z();
     static_transformStamped.transform.rotation.w = lpMfp.getRotation().w();
 
-    //    static_transformStamped.header.frame_id = "world";
-    //    static_transformStamped.child_frame_id = "follower_target";
-    //    static_transformStamped.transform.translation.x = tfx;
-    //    static_transformStamped.transform.translation.y = tfy;
-    //    static_transformStamped.transform.translation.z = tfz;
-    //    auto quat = tf::createQuaternionFromRPY(tfroll, tfpich, tfyaw);
-    //    static_transformStamped.transform.rotation.x = quat.getX();
-    //    static_transformStamped.transform.rotation.y = quat.getY();
-    //    static_transformStamped.transform.rotation.z = quat.getZ();
-    //    static_transformStamped.transform.rotation.w = quat.getW();
-
     static_broadcaster.sendTransform(static_transformStamped);
 
     double terror = 0.01;
     bool grapSucceed = false;
+    double vx, vy, vz;
 
     while (ros::ok()) {
       l_msg.twist.linear.x = 0;
@@ -301,6 +286,10 @@ void TwinbotNetSimTracing::DoRun() {
         listener.lookupTransform("follower", "follower_target", ros::Time(0),
                                  fMfp);
 
+        listener.waitForTransform("leader", "follower", ros::Time(0),
+                                  ros::Duration(2));
+        listener.lookupTransform("leader", "follower", ros::Time(0), lMf);
+
       } catch (tf::TransformException &ex) {
         Warn("TF: {}", ex.what());
         continue;
@@ -325,9 +314,7 @@ void TwinbotNetSimTracing::DoRun() {
       double vrx = GetAngularVel(roll);
       double vry = GetAngularVel(pitch);
       double vrz = GetAngularVel(yaw);
-      double vx = GetLinearVel(vTlpX);
-      double vy = GetLinearVel(vTlpY);
-      double vz = GetLinearVel(vTlpZ);
+      GetLinearVel(vTlpX, vTlpY, vTlpZ, vx, vy, vz);
 
       l_msg.twist.linear.x = vx;
       l_msg.twist.linear.y = vy;
@@ -344,9 +331,7 @@ void TwinbotNetSimTracing::DoRun() {
         vrx = GetAngularVel(roll);
         vry = GetAngularVel(pitch);
         vrz = GetAngularVel(yaw);
-        vx = GetLinearVel(vTfpX);
-        vy = GetLinearVel(vTfpY);
-        vz = GetLinearVel(vTfpZ);
+        GetLinearVel(vTfpX, vTfpY, vTfpZ, vx, vy, vz);
 
         f_msg.twist.linear.x = vx;
         f_msg.twist.linear.y = vy;
@@ -361,7 +346,7 @@ void TwinbotNetSimTracing::DoRun() {
         lv.setOrigin(tf::Vector3(vx, vy, vz));
         lv.setRotation(rotv);
         wVl = wMl * lv;
-        fv = wMf.inverse() * wVl * lpMfp;
+        fv = wMf.inverse() * wVl * lMf;
 
         auto orig = fv.getOrigin();
         auto rot = fv.getBasis();
@@ -384,11 +369,6 @@ void TwinbotNetSimTracing::DoRun() {
         wMlp.setRotation(tf::createQuaternionFromRPY(0, 0, lyaworig));
         grapSucceed = true;
       }
-
-      // Info("[ {} , {} , {} ] ", vTlpX, vTlpY, vTlpZ);
-      //        auto lpMfpRot = lpMfp.getRotation();
-      //        tf::Transform tmp;
-      //        tmp.setRotation()
       rate.sleep();
     }
   });
@@ -397,19 +377,3 @@ void TwinbotNetSimTracing::DoRun() {
 
 CLASS_LOADER_REGISTER_CLASS(TwinbotNetSimTracing, NetSimTracing)
 } // namespace uwsim_netstim
-
-/*
-f_msg.twist.linear.x = 0;
-f_msg.twist.linear.y = 0;
-f_msg.twist.linear.z = 0;
-f_msg.twist.angular.x = 0;
-f_msg.twist.angular.y = 0;
-f_msg.twist.angular.z = 0;
-
-s_msg.twist.linear.x = 0;
-s_msg.twist.linear.y = 0;
-s_msg.twist.linear.z = 0;
-s_msg.twist.angular.x = 0;
-s_msg.twist.angular.y = 0;
-s_msg.twist.angular.z = 0;
-*/

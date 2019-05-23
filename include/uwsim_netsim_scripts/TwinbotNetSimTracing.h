@@ -46,7 +46,8 @@ public:
   struct PIDStatus {};
   PIDStatus leader_pid, follower_pid, support_pid;
   int freq;
-  double GetLinearVel(const double &diff);
+  void GetLinearVel(const double &diffx, const double &diffy,
+                    const double &diffz, double &vx, double &vy, double &vz);
   double GetAngularVel(const double &diff);
 };
 } // namespace uwsim_netstim
