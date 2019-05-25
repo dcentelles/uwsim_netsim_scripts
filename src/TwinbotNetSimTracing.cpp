@@ -30,6 +30,22 @@ TwinbotNetSimTracing::TwinbotNetSimTracing() : NetSimTracing() {
       "/uwsim/leader/joint_state_command", 1);
   follower_joint_pub = node.advertise<sensor_msgs::JointState>(
       "/uwsim/follower/joint_state_command", 1);
+
+  leader_gled_pub =
+      node.advertise<underwater_sensor_msgs::LedLight>("/leader_leds/green", 1);
+  leader_rled_pub =
+      node.advertise<underwater_sensor_msgs::LedLight>("/leader_leds/red", 1);
+
+  follower_gled_pub = node.advertise<underwater_sensor_msgs::LedLight>(
+      "/follower_leds/green", 1);
+  follower_rled_pub =
+      node.advertise<underwater_sensor_msgs::LedLight>("/follower_leds/red", 1);
+  support_gled_pub = node.advertise<underwater_sensor_msgs::LedLight>(
+      "/support_leds/green", 1);
+  support_rled_pub =
+      node.advertise<underwater_sensor_msgs::LedLight>("/support_leds/red", 1);
+
+  ledmsg.duration = ros::Duration(0.3);
 }
 
 void TwinbotNetSimTracing::PacketTransmitting(std::string path,
@@ -40,6 +56,19 @@ void TwinbotNetSimTracing::PacketTransmitting(std::string path,
   Info("[{}] TX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
        dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
        header.GetPacketSize());
+
+  auto mac = dev->GetMac();
+  switch (mac) {
+  case 1:
+    support_rled_pub.publish(ledmsg);
+    break;
+  case 2:
+    leader_rled_pub.publish(ledmsg);
+    break;
+  case 3:
+    follower_rled_pub.publish(ledmsg);
+    break;
+  }
 }
 
 void TwinbotNetSimTracing::PacketDropsUpdated(std::string path,
@@ -97,6 +126,19 @@ void TwinbotNetSimTracing::PacketReceived(std::string path,
   Info("[{}] RX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
        dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
        header.GetPacketSize());
+
+  auto mac = dev->GetMac();
+  switch (mac) {
+  case 1:
+    support_gled_pub.publish(ledmsg);
+    break;
+  case 2:
+    leader_gled_pub.publish(ledmsg);
+    break;
+  case 3:
+    follower_gled_pub.publish(ledmsg);
+    break;
+  }
 }
 
 void TwinbotNetSimTracing::MacRx(std::string path, ROSCommsDevicePtr dev,
@@ -113,6 +155,13 @@ void TwinbotNetSimTracing::MacTx(std::string path, ROSCommsDevicePtr dev,
   pkt->PeekHeader(header);
   Info("[{}] MAC TX -- ID: {} ; MAC: {} ; Size: {}", path, dev->GetDccommsId(),
        dev->GetMac(), header.GetSize());
+}
+
+void TwinbotNetSimTracing::ShowPosition(string path, ROSCommsDevicePtr dev,
+                                        const tf::Vector3 &pos) {
+
+  Info("[{}] POS: {} {} {}", dev->GetDccommsId(), pos.getX(), pos.getY(),
+       pos.getZ());
 }
 
 void TwinbotNetSimTracing::Configure() {
@@ -175,6 +224,10 @@ void TwinbotNetSimTracing::Configure() {
       "/NodeList/*/DeviceList/0/Mac/TxPacketDrops",
       ns3::MakeCallback(&TwinbotNetSimTracing::MacPacketDropsUpdated, this));
 
+  ns3::Config::Connect(
+      "/ROSDeviceList/*/CourseChange",
+      ns3::MakeCallback(&TwinbotNetSimTracing::ShowPosition, this));
+
   freq = 10;
 }
 
@@ -220,7 +273,7 @@ void TwinbotNetSimTracing::GetExplorerLinearVel(const double &diffx,
 
 void TwinbotNetSimTracing::DoRun() {
 
-  std::thread explorersWork([this]() {
+  std::thread explorersWork([&]() {
     tf::TransformListener listener;
     static tf2_ros::StaticTransformBroadcaster static_broadcaster;
     geometry_msgs::TransformStamped static_transformStamped;
@@ -229,6 +282,8 @@ void TwinbotNetSimTracing::DoRun() {
     tf::Transform e0Me1, e0Me2, e0Me3, wMeorig, eorigMe0target; //, pipeMe;
     geometry_msgs::TwistStamped explorer_msg;
     sensor_msgs::JointState joint_msg;
+
+    ros::Time::sleepUntil(ros::Time::now() + ros::Duration(40));
     joint_msg.name.push_back("Elbow");
     joint_msg.position.push_back(0.2);
     joint_msg.name.push_back("Shoulder");
@@ -310,8 +365,8 @@ void TwinbotNetSimTracing::DoRun() {
     static_transformStamped.transform.rotation.w = e0Me3.getRotation().w();
     static_transforms.push_back(static_transformStamped);
 
-    int numWaypointsPerRad =360;
-    int numRads = 1;
+    int numWaypointsPerRad = 360;
+    int numRads = 3;
     double radInc = 5;
     double rad = 10;
     double angle = 0;
@@ -340,21 +395,26 @@ void TwinbotNetSimTracing::DoRun() {
         angle += angleInc;
         leaderTargetTfs.push_back(eoMte0);
 
-//        static_transformStamped.header.stamp = ros::Time::now();
-//        static_transformStamped.header.frame_id = "explorers_origin";
-//        static_transformStamped.child_frame_id =
-//            "e0_target_" + std::to_string(i) + "_" + std::to_string(rad);
-//        static_transformStamped.transform.translation.x =
-//            eoMte0.getOrigin().getX();
-//        static_transformStamped.transform.translation.y =
-//            eoMte0.getOrigin().getY();
-//        static_transformStamped.transform.translation.z =
-//            eoMte0.getOrigin().getZ();
-//        static_transformStamped.transform.rotation.x = eoMte0.getRotation().x();
-//        static_transformStamped.transform.rotation.y = eoMte0.getRotation().y();
-//        static_transformStamped.transform.rotation.z = eoMte0.getRotation().z();
-//        static_transformStamped.transform.rotation.w = eoMte0.getRotation().w();
-//        static_transforms.push_back(static_transformStamped);
+        //        static_transformStamped.header.stamp = ros::Time::now();
+        //        static_transformStamped.header.frame_id = "explorers_origin";
+        //        static_transformStamped.child_frame_id =
+        //            "e0_target_" + std::to_string(i) + "_" +
+        //            std::to_string(rad);
+        //        static_transformStamped.transform.translation.x =
+        //            eoMte0.getOrigin().getX();
+        //        static_transformStamped.transform.translation.y =
+        //            eoMte0.getOrigin().getY();
+        //        static_transformStamped.transform.translation.z =
+        //            eoMte0.getOrigin().getZ();
+        //        static_transformStamped.transform.rotation.x =
+        //        eoMte0.getRotation().x();
+        //        static_transformStamped.transform.rotation.y =
+        //        eoMte0.getRotation().y();
+        //        static_transformStamped.transform.rotation.z =
+        //        eoMte0.getRotation().z();
+        //        static_transformStamped.transform.rotation.w =
+        //        eoMte0.getRotation().w();
+        //        static_transforms.push_back(static_transformStamped);
       }
       rad -= radInc;
     }
@@ -401,10 +461,12 @@ void TwinbotNetSimTracing::DoRun() {
           auto mat3 = e3Mte3.getBasis();
           mat3.getRPY(roll3, pitch3, yaw3);
 
-          if (std::abs(e0x) <= terror && std::abs(e0y) <= terror && std::abs(e0z) <= terror &&
-              std::abs(e1x) <= terror && std::abs(e1y) <= terror && std::abs(e1z) <= terror &&
-              std::abs(e2x) <= terror && std::abs(e2y) <= terror && std::abs(e2z) <= terror &&
-              std::abs(e3x) <= terror && std::abs(e3y) <= terror && std::abs(e3z) <= terror) {
+          if (std::abs(e0x) <= terror && std::abs(e0y) <= terror &&
+              std::abs(e0z) <= terror && std::abs(e1x) <= terror &&
+              std::abs(e1y) <= terror && std::abs(e1z) <= terror &&
+              std::abs(e2x) <= terror && std::abs(e2y) <= terror &&
+              std::abs(e2z) <= terror && std::abs(e3x) <= terror &&
+              std::abs(e3y) <= terror && std::abs(e3z) <= terror) {
             break;
           }
 
@@ -476,11 +538,12 @@ void TwinbotNetSimTracing::DoRun() {
   });
   explorersWork.detach();
 
-  std::thread iavWork([this]() {
+  std::thread iavWork([&]() {
     tf::TransformListener listener;
     static tf2_ros::StaticTransformBroadcaster static_broadcaster;
     geometry_msgs::TransformStamped static_transformStamped;
     std::vector<geometry_msgs::TransformStamped> static_transforms;
+    ros::Time::sleepUntil(ros::Time::now() + ros::Duration(40));
 
     // LEADER - FOLLOWER
     double tfx = -0.329943, tfy = -1.38252, tfz = 16.9526;

@@ -37,11 +37,17 @@ public:
   void Configure();
   void DoRun();
 
+  void ShowPosition(string path, ROSCommsDevicePtr dev, const tf::Vector3 &pos);
+
   ros::NodeHandle node;
   underwater_sensor_msgs::LedLight ledmsg;
   ros::Publisher leader_pub, follower_pub, support_pub, e0_pub, e1_pub, e2_pub,
       e3_pub;
   ros::Publisher leader_joint_pub, follower_joint_pub;
+
+  ros::Publisher leader_gled_pub, leader_rled_pub, follower_gled_pub,
+      follower_rled_pub, support_gled_pub, support_rled_pub;
+
   // ros::Subscriber leader_sub, follower_sub, support_sub;
   // nav_msgs::Odometry leader_odom, follower_odom, support_odom;
 
@@ -52,7 +58,8 @@ public:
                     const double &diffz, double &vx, double &vy, double &vz);
 
   void GetExplorerLinearVel(const double &diffx, const double &diffy,
-                    const double &diffz, double &vx, double &vy, double &vz);
+                            const double &diffz, double &vx, double &vy,
+                            double &vz);
   double GetAngularVel(const double &diff);
   double GetExplorerAngularVel(const double &diff);
 
