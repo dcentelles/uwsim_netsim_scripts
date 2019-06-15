@@ -160,8 +160,8 @@ void TwinbotNetSimTracing::MacTx(std::string path, ROSCommsDevicePtr dev,
 void TwinbotNetSimTracing::ShowPosition(string path, ROSCommsDevicePtr dev,
                                         const tf::Vector3 &pos) {
 
-  Info("[{}] POS: {} {} {}", dev->GetDccommsId(), pos.getX(), pos.getY(),
-       pos.getZ());
+//  Info("[{}] POS: {} {} {}", dev->GetDccommsId(), pos.getX(), pos.getY(),
+//       pos.getZ());
 }
 
 void TwinbotNetSimTracing::Configure() {
@@ -308,6 +308,9 @@ void TwinbotNetSimTracing::DoRun() {
                  4;
     wMeorig.setOrigin(eOrig);
     wMeorig.setRotation(tf::createQuaternionFromRPY(0, 0, 0));
+
+    auto eorigMe0 = wMeorig.inverse() * wMe0;
+
     static_transformStamped.header.stamp = ros::Time::now();
     static_transformStamped.header.frame_id = "world";
     static_transformStamped.child_frame_id = "explorers_origin";
@@ -375,7 +378,7 @@ void TwinbotNetSimTracing::DoRun() {
     std::vector<tf::Transform> leaderTargetTfs;
     for (int r = 0; r < numRads; r++) {
       for (int i = 0; i < numWaypointsPerRad; i++) {
-        tf::Transform eoMte0, rot, trans;
+        tf::Transform eoMe02, eo2Mte0, rot, trans;
         double radians = AngleToRadians(angle);
         trans.setOrigin(tf::Vector3(0, rad, 0));
         trans.setRotation(tf::createQuaternionFromYaw(0));
@@ -386,14 +389,15 @@ void TwinbotNetSimTracing::DoRun() {
         auto quatw = quat.w();
         rot.setRotation(quat);
         rot.setOrigin(tf::Vector3(0, 0, 0));
-        eoMte0 = rot * trans; // = explorers origin to explorer leader target
-        quat = eoMte0.getRotation();
+        eoMe02 = rot * trans; // = explorers origin to explorer leader target
+        quat = eoMe02.getRotation();
         quatx = quat.x();
         quaty = quat.y();
         quatz = quat.z();
         quatw = quat.w();
+        eo2Mte0 = eoMe02 * eorigMe0;
         angle += angleInc;
-        leaderTargetTfs.push_back(eoMte0);
+        leaderTargetTfs.push_back(eo2Mte0);
 
         //        static_transformStamped.header.stamp = ros::Time::now();
         //        static_transformStamped.header.frame_id = "explorers_origin";
