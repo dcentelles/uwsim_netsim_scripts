@@ -109,7 +109,7 @@ void MoveRobotsNetSimTracing::Configure() {
 
   // If you want to avoid showing the relative simulation time use
   // the native spdlog::pattern_formatter instead:
-   SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%D %T.%F] %v"));
+  SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%D %T.%F] %v"));
 
   //---------------------------------------------------------------------
 
@@ -159,35 +159,36 @@ void MoveRobotsNetSimTracing::DoRun() {
     double baseVelocity = 0.1;
     double r = 20;
     double itt = 1. / r;
-    double range = 7.6; //meters
+    double range = 5; // meters
 
     ros::Rate rate(r);
 
     int counter, its = range / (itt * baseVelocity);
+    int its2 = its / 1.9;
 
-    while (ros::ok()) {
-      std::this_thread::sleep_for(10s);
-      msg.twist.linear.x = baseVelocity;
+    // while (ros::ok()) {
+    std::this_thread::sleep_for(10s);
+    msg.twist.linear.x = baseVelocity;
 
-      counter = 0;
-      while (counter < its && ros::ok()) {
-        //bluerov2Pub.publish(msg);
-        rate.sleep();
-        counter += 1;
-      }
-
-      msg.twist.linear.x = -baseVelocity;
-
-      counter = 0;
-      while (counter < its && ros::ok()) {
-        //bluerov2Pub.publish(msg);
-        rate.sleep();
-        counter += 1;
-      }
+    counter = 0;
+    while (counter < its && ros::ok()) {
+      bluerov2Pub.publish(msg);
+      rate.sleep();
+      counter += 1;
     }
+
+    msg.twist.linear.x = -baseVelocity;
+
+    counter = 0;
+    while (counter < its2 && ros::ok()) {
+      bluerov2Pub.publish(msg);
+      rate.sleep();
+      counter += 1;
+    }
+    // }
   });
   work.detach();
 }
 
 CLASS_LOADER_REGISTER_CLASS(MoveRobotsNetSimTracing, NetSimTracing)
-}
+} // namespace uwsim_netstim
