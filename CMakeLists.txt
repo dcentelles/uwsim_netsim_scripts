@@ -36,6 +36,7 @@ include_directories(
    src/ArdusubTest0.cpp
    src/ShipwreckNetSimTracing.cpp
    src/TwinbotNetSimTracing.cpp
+   src/HILNetSimTracing.cpp
  )
 
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})

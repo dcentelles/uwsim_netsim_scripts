@@ -164,7 +164,7 @@ void MoveRobotsNetSimTracing::DoRun() {
     ros::Rate rate(r);
 
     int counter, its = range / (itt * baseVelocity);
-    int its2 = its / 1.9;
+    int its2 = its / 4;
 
     // while (ros::ok()) {
     std::this_thread::sleep_for(10s);
