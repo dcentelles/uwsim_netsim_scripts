@@ -37,6 +37,7 @@ include_directories(
    src/ShipwreckNetSimTracing.cpp
    src/TwinbotNetSimTracing.cpp
    src/HILNetSimTracing.cpp
+   src/HIL2NetSimTracing.cpp
  )
 
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})

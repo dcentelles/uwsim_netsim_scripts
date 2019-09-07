@@ -156,7 +156,7 @@ void MoveRobotsNetSimTracing::DoRun() {
     msg.twist.angular.y = 0;
     msg.twist.angular.z = 0;
 
-    double baseVelocity = 0.1;
+    double baseVelocity = 0.25;
     double r = 20;
     double itt = 1. / r;
     double range = 5; // meters
@@ -164,7 +164,6 @@ void MoveRobotsNetSimTracing::DoRun() {
     ros::Rate rate(r);
 
     int counter, its = range / (itt * baseVelocity);
-    int its2 = its / 4;
 
     // while (ros::ok()) {
     std::this_thread::sleep_for(10s);
@@ -178,6 +177,16 @@ void MoveRobotsNetSimTracing::DoRun() {
     }
 
     msg.twist.linear.x = -baseVelocity;
+
+    counter = 0;
+    int its2 = its / 4;
+    while (counter < its2 && ros::ok()) {
+      bluerov2Pub.publish(msg);
+      rate.sleep();
+      counter += 1;
+    }
+
+    std::this_thread::sleep_for(10s);
 
     counter = 0;
     while (counter < its2 && ros::ok()) {
