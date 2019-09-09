@@ -272,7 +272,7 @@ void HIL2NetSimTracing::explorerTxWork(int src, CommsDeviceServicePtr &stream,
     stream << pkt;
     Info("E{}: TX TO {} SEQ {}", src, pkt->GetDestAddr(), pkt->GetSeq());
 
-    std::this_thread::sleep_for(chrono::seconds(1));
+    std::this_thread::sleep_for(chrono::seconds(5));
   }
 }
 
@@ -313,44 +313,47 @@ void HIL2NetSimTracing::explorerRxWork(int src, CommsDeviceServicePtr &stream,
 void HIL2NetSimTracing::DoRun() {
 
   std::thread gpsWork([&]() {
+    tf::TransformListener listener;
     while (1) {
-      tf::TransformListener listener;
       try {
 
-        wMe1_mutex.lock();
+        std::unique_lock<std::mutex> wMe1_lock(wMe1_mutex);
         listener.lookupTransform("world", "explorer1", ros::Time(0), wMe1);
-        wMe1_mutex.unlock();
+        wMe1_lock.unlock();
 
-        wMe2_mutex.lock();
+        std::unique_lock<std::mutex> wMe2_lock(wMe2_mutex);
         listener.lookupTransform("world", "explorer2", ros::Time(0), wMe2);
-        wMe2_mutex.unlock();
+        wMe2_lock.unlock();
 
-        wMe3_mutex.lock();
+        std::unique_lock<std::mutex> wMe3_lock(wMe3_mutex);
         listener.lookupTransform("world", "explorer3", ros::Time(0), wMe3);
-        wMe3_mutex.unlock();
+        wMe3_lock.unlock();
 
-        wMl1_mutex.lock();
+        std::unique_lock<std::mutex> lwMl1_lock(wMl1_mutex);
         listener.lookupTransform("world", "leader1", ros::Time(0), wMl1);
-        wMl1_mutex.unlock();
+        lwMl1_lock.unlock();
 
-        wMe1_2_mutex.lock();
+        std::unique_lock<std::mutex> wMe1_2_lock(wMe1_2_mutex);
         listener.lookupTransform("world", "explorer1_2", ros::Time(0), wMe1_2);
-        wMe1_2_mutex.unlock();
+        wMe1_2_lock.unlock();
 
-        wMe2_2_mutex.lock();
+        std::unique_lock<std::mutex> wMe2_2_lock(wMe2_2_mutex);
         listener.lookupTransform("world", "explorer2_2", ros::Time(0), wMe2_2);
-        wMe2_2_mutex.unlock();
+        wMe2_2_lock.unlock();
 
-        wMe3_2_mutex.lock();
+        std::unique_lock<std::mutex> wMe3_2_lock(wMe3_2_mutex);
         listener.lookupTransform("world", "explorer3_2", ros::Time(0), wMe3_2);
-        wMe3_2_mutex.unlock();
+        wMe3_2_lock.unlock();
+        // std::this_thread::sleep_for(chrono::milliseconds(100));
 
       } catch (tf::TransformException &ex) {
         Warn("TF: {}", ex.what());
+        std::this_thread::sleep_for(chrono::milliseconds(100));
         continue;
       }
     }
   });
+  gpsWork.detach();
 
   std::thread explorersWork([&]() {
     tf::TransformListener listener;
@@ -444,16 +447,6 @@ void HIL2NetSimTracing::DoRun() {
         listener.lookupTransform("leader1", "te1_2", ros::Time(0), l1Mte1_2);
         listener.lookupTransform("leader1", "te2_2", ros::Time(0), l1Mte2_2);
         listener.lookupTransform("leader1", "te3_2", ros::Time(0), l1Mte3_2);
-        //        listener.lookupTransform("explorer1", "te1", ros::Time(0),
-        //        e1Mte1); listener.lookupTransform("explorer2", "te2",
-        //        ros::Time(0), e2Mte2); listener.lookupTransform("explorer3",
-        //        "te3", ros::Time(0), e3Mte3);
-        //        listener.lookupTransform("explorer1_2", "te1_2", ros::Time(0),
-        //                                 e1_2Mte1_2);
-        //        listener.lookupTransform("explorer2_2", "te2_2", ros::Time(0),
-        //                                 e2_2Mte2_2);
-        //        listener.lookupTransform("explorer3_2", "te3_2", ros::Time(0),
-        //                                 e3_2Mte3_2);
         break;
       } catch (tf::TransformException &ex) {
         Warn("TF: {}", ex.what());
@@ -461,14 +454,31 @@ void HIL2NetSimTracing::DoRun() {
       }
     }
     while (1) {
-      if (!wMhil_comms_received || !wMl1_comms_received) {
+      tf::StampedTransform e1Mte1_aux, e2Mte2_aux, e3Mte3_aux;
+      while (1) {
+        try {
+          // tmp
+          listener.lookupTransform("explorer1", "te1", ros::Time(0),
+                                   e1Mte1_aux);
+          listener.lookupTransform("explorer2", "te2", ros::Time(0),
+                                   e2Mte2_aux);
+          listener.lookupTransform("explorer3", "te3", ros::Time(0),
+                                   e3Mte3_aux);
+          break;
+        } catch (tf::TransformException &ex) {
+          Warn("TF: {}", ex.what());
+          continue;
+        }
+      }
+      // if (!wMhil_comms_received || !wMl1_comms_received) {
+      if (!wMl1_comms_received) {
         std::this_thread::sleep_for(chrono::seconds(1));
         continue;
       }
       wMhil_comms_mutex.lock();
-      e1Mte1 = wMe1.inverse() * wMhil_comms * hilMte1;
-      e2Mte2 = wMe2.inverse() * wMhil_comms * hilMte2;
-      e3Mte3 = wMe3.inverse() * wMhil_comms * hilMte3;
+      e1Mte1 = e1Mte1_aux; //wMe1.inverse() * wMhil_comms * hilMte1;
+      e2Mte2 = e2Mte2_aux; //wMe2.inverse() * wMhil_comms * hilMte2;
+      e3Mte3 = e3Mte3_aux; //wMe3.inverse() * wMhil_comms * hilMte3;
       wMhil_comms_mutex.unlock();
 
       wMl1_comms_mutex.lock();
@@ -711,7 +721,7 @@ void HIL2NetSimTracing::DoRun() {
       // Update leader0 position
       pkt->SetDestAddr(1);
       pkt->SetSeq(l0seq++);
-      nextTarget = hilTargets[idx];
+      nextTarget = hilTargets[idx % hilTargets.size()];
       *x = nextTarget[0] * 100;
       *y = nextTarget[1] * 100;
       *z = nextTarget[2] * 100;
@@ -723,7 +733,7 @@ void HIL2NetSimTracing::DoRun() {
       std::this_thread::sleep_for(chrono::seconds(0));
 
       // Update leader1 position
-      originMl1t = leaderTargetTfs[idx];
+      originMl1t = leaderTargetTfs[idx % leaderTargetTfs.size()];
       wMtl1 = wMorigin * originMl1t;
       *x = wMtl1.getOrigin().x() * 100;
       *y = wMtl1.getOrigin().y() * 100;
@@ -738,11 +748,14 @@ void HIL2NetSimTracing::DoRun() {
       buoy << pkt;
       Info("BUOY: TX TO {} SEQ {}", pkt->GetDestAddr(), pkt->GetSeq());
 
-      std::this_thread::sleep_for(chrono::seconds(1));
+      std::this_thread::sleep_for(chrono::seconds(5));
 
       targetPositionIndex++;
     }
   });
+
+  buoyRxWork.detach();
+  buoyTxWork.detach();
 
   // TEAM 1
   hil = dccomms::CreateObject<CommsDeviceService>(pb);
@@ -765,8 +778,7 @@ void HIL2NetSimTracing::DoRun() {
   std::thread e2_tx_Work([&]() { explorerTxWork(3, e2, wMe1_mutex, wMe1); });
   std::thread e3_tx_Work([&]() { explorerTxWork(4, e3, wMe2_mutex, wMe2); });
   std::thread e1_rx_Work([&]() {
-    explorerRxWork(2, e1_2, wMhil_comms_mutex, wMhil_comms,
-                   wMhil_comms_received);
+    explorerRxWork(2, e1, wMhil_comms_mutex, wMhil_comms, wMhil_comms_received);
   });
 
   e1_tx_Work.detach();
@@ -788,7 +800,7 @@ void HIL2NetSimTracing::DoRun() {
   e2_2->Start();
 
   e3_2 = dccomms::CreateObject<CommsDeviceService>(pb);
-  e3_2->SetCommsDeviceId("comms_explorer3_3");
+  e3_2->SetCommsDeviceId("comms_explorer3_2");
   e3_2->Start();
 
   std::thread leader1TxWork([&]() {
@@ -824,23 +836,36 @@ void HIL2NetSimTracing::DoRun() {
       Info("L1: TX TO {} SEQ {}", pkt->GetDestAddr(), pkt->GetDestAddr(),
            pkt->GetSeq());
 
-      std::this_thread::sleep_for(chrono::seconds(1));
+      std::this_thread::sleep_for(chrono::seconds(5));
     }
   });
 
   std::thread leader1RxWork([&]() {
     auto pkt = pb->Create();
     auto pd = pkt->GetPayloadBuffer();
-    uint8_t *nrovs = pd;
     int16_t *x = (int16_t *)(pd + 1), *y = x + 1, *z = y + 1, *roll = z + 1,
             *pitch = roll + 1, *yaw = pitch + 1;
+    tf::Vector3 pos;
+    double droll, dpitch, dyaw;
+    tf::Quaternion rot;
     while (true) {
       leader1 >> pkt;
       if (pkt->PacketIsOk()) {
+        // we have received the position of the buoy
+        pos = tf::Vector3(*x / 100., *y / 100., *z / 100.);
+        droll = GetContinuousRPY(*roll);
+        dpitch = GetContinuousRPY(*pitch);
+        dyaw = GetContinuousRPY(*yaw);
+        rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw);
         uint32_t seq = pkt->GetSeq();
         Info("L1: RX FROM {} SEQ {} SIZE {} REQ: {} {} {} {} {} {}",
              pkt->GetSrcAddr(), seq, pkt->GetPacketSize(), *x, *y, *z, *roll,
              *pitch, *yaw);
+        wMtl1_comms_mutex.lock();
+        wMtl1_comms.setOrigin(pos);
+        wMtl1_comms.setRotation(rot);
+        wMtl1_received = true;
+        wMtl1_comms_mutex.unlock();
       } else
         Warn("L1: ERR");
     }
@@ -857,6 +882,7 @@ void HIL2NetSimTracing::DoRun() {
   });
 
   leader1RxWork.detach();
+  leader1TxWork.detach();
   e1_2_tx_Work.detach();
   e2_2_tx_Work.detach();
   e3_2_tx_Work.detach();
