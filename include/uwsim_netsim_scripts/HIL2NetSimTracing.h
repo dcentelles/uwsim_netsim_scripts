@@ -65,7 +65,8 @@ public:
 
   std::mutex wMe1_mutex, wMe2_mutex, wMe3_mutex, wMl1_mutex, wMe0_2_mutex, wMe1_2_mutex,
       wMe2_2_mutex, wMe3_2_mutex, wMhil_comms_mutex, wMl1_comms_mutex, wMtl1_comms_mutex;
-  tf::Transform e1Mte1, e2Mte2, e3Mte3, e1_2Mte1_2, e2_2Mte2_2, e3_2Mte3_2, wMtl1_comms;
+  tf::Transform e1Mte1, e2Mte2, e3Mte3, e1_2Mte1_2, e2_2Mte2_2, e3_2Mte3_2, wMtl1_comms,
+      l1Mtl1;
   tf::StampedTransform hilMte1, hilMte2, hilMte3, l1Mte1_2, l1Mte2_2, l1Mte3_2,
       wMe1, wMe2, wMe3, wMl1, wMe1_2, wMe2_2, wMe3_2;
 

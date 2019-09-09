@@ -11,14 +11,14 @@ namespace uwsim_netstim {
 
 using namespace dccomms_packets;
 
-int GetDiscreteYaw(double rad) {
+int GetDiscreteRot(double rad) {
   int degrees = std::round(rad * 180.0 / M_PI); // conversion to degrees
   if (degrees < 0)
     degrees += 360; // convert negative to positive angles
 
   return degrees;
 }
-double GetContinuousRPY(int deg) { return deg / 180. * M_PI; }
+double GetContinuousRot(int deg) { return deg / 180. * M_PI; }
 
 HIL2NetSimTracing::HIL2NetSimTracing() : NetSimTracing() {
   e1_pub = node.advertise<geometry_msgs::TwistStamped>(
@@ -43,30 +43,30 @@ void HIL2NetSimTracing::PacketTransmitting(std::string path,
                                            ns3ConstPacketPtr pkt) {
   NetsimHeader header;
   pkt->PeekHeader(header);
-  Info("[{}] TX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
-       dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
-       header.GetPacketSize());
+  //  Info("[{}] TX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
+  //       dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
+  //       header.GetPacketSize());
 }
 
 void HIL2NetSimTracing::PacketDropsUpdated(std::string path, uint32_t oldValue,
                                            uint32_t newValue) {
-  Info("[{}] PKTDROPS {}", path, newValue);
+  // Info("[{}] PKTDROPS {}", path, newValue);
 }
 
 void HIL2NetSimTracing::TxFifoUpdated(std::string path, uint32_t oldValue,
                                       uint32_t newValue) {
-  Info("[{}] TXFIFO {}", path, newValue);
+  // Info("[{}] TXFIFO {}", path, newValue);
 }
 
 void HIL2NetSimTracing::MacPacketDropsUpdated(std::string path,
                                               uint32_t oldValue,
                                               uint32_t newValue) {
-  Info("[{}] MAC PKTDROPS {}", path, newValue);
+  // Info("[{}] MAC PKTDROPS {}", path, newValue);
 }
 
 void HIL2NetSimTracing::MacTxFifoUpdated(std::string path, uint32_t oldValue,
                                          uint32_t newValue) {
-  Info("[{}] MAC TXFIFO {}", path, newValue);
+  // Info("[{}] MAC TXFIFO {}", path, newValue);
 }
 
 void HIL2NetSimTracing::PacketError(std::string path, ROSCommsDevicePtr dev,
@@ -75,48 +75,50 @@ void HIL2NetSimTracing::PacketError(std::string path, ROSCommsDevicePtr dev,
 
   NetsimHeader header;
   pkt->PeekHeader(header);
-  if (propErr) {
-    if (!colErr) {
-      Warn("[{}] PERR -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
-           dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
-           header.GetPacketSize());
-    } else {
+  //  if (propErr) {
+  //    if (!colErr) {
+  //      Warn("[{}] PERR -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
+  //           dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
+  //           header.GetPacketSize());
+  //    } else {
 
-      Warn("[{}] MERR -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
-           dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
-           header.GetPacketSize());
-    }
-  } else {
+  //      Warn("[{}] MERR -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
+  //           dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
+  //           header.GetPacketSize());
+  //    }
+  //  } else {
 
-    Warn("[{}] COL -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
-         dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
-         header.GetPacketSize());
-  }
+  //    Warn("[{}] COL -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
+  //         dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
+  //         header.GetPacketSize());
+  //  }
 }
 
 void HIL2NetSimTracing::PacketReceived(std::string path, ROSCommsDevicePtr dev,
                                        ns3ConstPacketPtr pkt) {
   NetsimHeader header;
   pkt->PeekHeader(header);
-  Info("[{}] RX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
-       dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
-       header.GetPacketSize());
+  //  Info("[{}] RX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
+  //       dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
+  //       header.GetPacketSize());
 }
 
 void HIL2NetSimTracing::MacRx(std::string path, ROSCommsDevicePtr dev,
                               ns3ConstPacketPtr pkt) {
   AquaSimHeader header;
   pkt->PeekHeader(header);
-  Info("[{}] MAC RX -- ID: {} ; MAC: {} ; Size: {}", path, dev->GetDccommsId(),
-       dev->GetMac(), header.GetSize());
+  //  Info("[{}] MAC RX -- ID: {} ; MAC: {} ; Size: {}", path,
+  //  dev->GetDccommsId(),
+  //       dev->GetMac(), header.GetSize());
 }
 
 void HIL2NetSimTracing::MacTx(std::string path, ROSCommsDevicePtr dev,
                               ns3ConstPacketPtr pkt) {
   AquaSimHeader header;
   pkt->PeekHeader(header);
-  Info("[{}] MAC TX -- ID: {} ; MAC: {} ; Size: {}", path, dev->GetDccommsId(),
-       dev->GetMac(), header.GetSize());
+  //  Info("[{}] MAC TX -- ID: {} ; MAC: {} ; Size: {}", path,
+  //  dev->GetDccommsId(),
+  //       dev->GetMac(), header.GetSize());
 }
 
 void HIL2NetSimTracing::ShowPosition(string path, ROSCommsDevicePtr dev,
@@ -263,9 +265,9 @@ void HIL2NetSimTracing::explorerTxWork(int src, CommsDeviceServicePtr &stream,
     *y = position.getOrigin().y() * 100;
     *z = position.getOrigin().z() * 100;
     position.getBasis().getRPY(tmp_roll, tmp_pitch, tmp_yaw);
-    *roll = 0;
-    *pitch = 0;
-    *yaw = GetDiscreteYaw(tmp_yaw);
+    *roll = GetDiscreteRot(tmp_roll);
+    *pitch = GetDiscreteRot(tmp_pitch);
+    *yaw = GetDiscreteRot(tmp_yaw);
 
     pkt->SetSeq(seq++);
     pkt->PayloadUpdated(pdSize);
@@ -293,9 +295,9 @@ void HIL2NetSimTracing::explorerRxWork(int src, CommsDeviceServicePtr &stream,
     if (pkt->PacketIsOk()) {
       // we have received the position of the leader
       pos = tf::Vector3(*x / 100., *y / 100., *z / 100.);
-      droll = GetContinuousRPY(*roll);
-      dpitch = GetContinuousRPY(*pitch);
-      dyaw = GetContinuousRPY(*yaw);
+      droll = GetContinuousRot(*roll);
+      dpitch = GetContinuousRot(*pitch);
+      dyaw = GetContinuousRot(*yaw);
       rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw);
       Info("E{}: RX FROM {} SEQ {} SIZE {} LP: {} {} {} {} {} {}", src,
            pkt->GetSrcAddr(), pkt->GetSeq(), pkt->GetPacketSize(), pos.x(),
@@ -470,24 +472,34 @@ void HIL2NetSimTracing::DoRun() {
           continue;
         }
       }
-      // if (!wMhil_comms_received || !wMl1_comms_received) {
-      if (!wMl1_comms_received) {
+      // if (!wMhil_comms_received || !wMl1_comms_received || !wMtl1_received) {
+      if (!wMl1_comms_received || !wMtl1_received) {
         std::this_thread::sleep_for(chrono::seconds(1));
         continue;
       }
+      // Compute target transform from every slave in team 1 (input: hil
+      // position from comms)
       wMhil_comms_mutex.lock();
-      e1Mte1 = e1Mte1_aux; //wMe1.inverse() * wMhil_comms * hilMte1;
-      e2Mte2 = e2Mte2_aux; //wMe2.inverse() * wMhil_comms * hilMte2;
-      e3Mte3 = e3Mte3_aux; //wMe3.inverse() * wMhil_comms * hilMte3;
+      e1Mte1 = e1Mte1_aux; // wMe1.inverse() * wMhil_comms * hilMte1;
+      e2Mte2 = e2Mte2_aux; // wMe2.inverse() * wMhil_comms * hilMte2;
+      e3Mte3 = e3Mte3_aux; // wMe3.inverse() * wMhil_comms * hilMte3;
       wMhil_comms_mutex.unlock();
 
+      // Compute target transform from every slave in team 2 (input: leader1
+      // position from comms)
       wMl1_comms_mutex.lock();
       e1_2Mte1_2 = wMe1_2.inverse() * wMl1_comms * l1Mte1_2;
       e2_2Mte2_2 = wMe2_2.inverse() * wMl1_comms * l1Mte2_2;
       e3_2Mte3_2 = wMe3_2.inverse() * wMl1_comms * l1Mte3_2;
       wMl1_comms_mutex.unlock();
 
-      // Get Translation
+      // Compute target transform from leader1 (leader of team 2)
+      wMtl1_comms_mutex.lock();
+      l1Mtl1 = wMl1.inverse() * wMtl1_comms;
+      wMtl1_comms_mutex.unlock();
+
+      // Get Translations
+      //    team 1
       auto e1Tte1 = e1Mte1.getOrigin();
       double e1x = e1Tte1.getX(), e1y = e1Tte1.getY(), e1z = e1Tte1.getZ();
       auto e2Tte2 = e2Mte2.getOrigin();
@@ -495,6 +507,7 @@ void HIL2NetSimTracing::DoRun() {
       auto e3Tte3 = e3Mte3.getOrigin();
       double e3x = e3Tte3.getX(), e3y = e3Tte3.getY(), e3z = e3Tte3.getZ();
 
+      //    team 2
       auto e1_2Tte1_2 = e1_2Mte1_2.getOrigin();
       double e1_2x = e1_2Tte1_2.getX(), e1_2y = e1_2Tte1_2.getY(),
              e1_2z = e1_2Tte1_2.getZ();
@@ -504,8 +517,11 @@ void HIL2NetSimTracing::DoRun() {
       auto e3_2Tte3_2 = e3_2Mte3_2.getOrigin();
       double e3_2x = e3_2Tte3_2.getX(), e3_2y = e3_2Tte3_2.getY(),
              e3_2z = e3_2Tte3_2.getZ();
+      auto l1Ttl1 = l1Mtl1.getOrigin();
+      double l1x = l1Ttl1.getX(), l1y = l1Ttl1.getY(), l1z = l1Ttl1.getZ();
 
-      // Get Rotation
+      // Get Rotations
+      //    team 1
       tfScalar roll1, pitch1, yaw1;
       auto mat1 = e1Mte1.getBasis();
       mat1.getRPY(roll1, pitch1, yaw1);
@@ -516,20 +532,24 @@ void HIL2NetSimTracing::DoRun() {
       auto mat3 = e3Mte3.getBasis();
       mat3.getRPY(roll3, pitch3, yaw3);
 
+      //    team 2
       tfScalar roll1_2, pitch1_2, yaw1_2;
-      auto mat1_2 = e1Mte1.getBasis();
+      auto mat1_2 = e1_2Mte1_2.getBasis();
       mat1_2.getRPY(roll1_2, pitch1_2, yaw1_2);
       tfScalar roll2_2, pitch2_2, yaw2_2;
-      auto mat2_2 = e2Mte2.getBasis();
+      auto mat2_2 = e2_2Mte2_2.getBasis();
       mat2_2.getRPY(roll2_2, pitch2_2, yaw2_2);
       tfScalar roll3_2, pitch3_2, yaw3_2;
-      auto mat3_2 = e3Mte3.getBasis();
+      auto mat3_2 = e3_2Mte3_2.getBasis();
       mat3_2.getRPY(roll3_2, pitch3_2, yaw3_2);
+      tfScalar roll_l1, pitch_l1, yaw_l1;
+      auto mat_l1 = l1Mtl1.getBasis();
+      mat_l1.getRPY(roll_l1, pitch_l1, yaw_l1);
 
       double vx, vy, vz;
       tfScalar roll, pitch, yaw;
 
-      // TEAM 1
+      // Compute and send velocities for TEAM 1
       GetExplorerLinearVel(e1x, e1y, e1z, vx, vy, vz);
       roll = GetExplorerAngularVel(roll1);
       pitch = GetExplorerAngularVel(pitch1);
@@ -572,7 +592,7 @@ void HIL2NetSimTracing::DoRun() {
 
       e3_pub.publish(explorer_msg);
 
-      // TEAM 2
+      // Compute and send velocities for TEAM 2
       GetExplorerLinearVel(e1_2x, e1_2y, e1_2z, vx, vy, vz);
       roll = GetExplorerAngularVel(roll1_2);
       pitch = GetExplorerAngularVel(pitch1_2);
@@ -614,6 +634,20 @@ void HIL2NetSimTracing::DoRun() {
       explorer_msg.twist.angular.z = yaw;
 
       e3_2pub.publish(explorer_msg);
+
+      GetExplorerLinearVel(l1x, l1y, l1z, vx, vy, vz);
+      roll = GetExplorerAngularVel(roll_l1);
+      pitch = GetExplorerAngularVel(pitch_l1);
+      yaw = GetExplorerAngularVel(yaw_l1);
+
+      explorer_msg.twist.linear.x = vx;
+      explorer_msg.twist.linear.y = vy;
+      explorer_msg.twist.linear.z = vz;
+      explorer_msg.twist.angular.x = roll;
+      explorer_msg.twist.angular.y = pitch;
+      explorer_msg.twist.angular.z = yaw;
+
+      leader1_pub.publish(explorer_msg);
 
       rate.sleep();
     }
@@ -712,11 +746,12 @@ void HIL2NetSimTracing::DoRun() {
 
     int targetPositionIndex = 0;
     tf::Transform originMl1t, wMorigin, wMtl1;
+    // World to NED = wMorigin
     wMorigin.setOrigin(tf::Vector3(0, 0, -10));
     std::vector<double> nextTarget;
-    wMorigin.setRotation(tf::createQuaternionFromYaw(0));
+    wMorigin.setRotation(tf::createQuaternionFromRPY(-M_PI, 0, 0));
     while (1) {
-      uint idx = static_cast<uint>(targetPositionIndex / 20);
+      uint idx = static_cast<uint>(targetPositionIndex);
 
       // Update leader0 position
       pkt->SetDestAddr(1);
@@ -739,16 +774,16 @@ void HIL2NetSimTracing::DoRun() {
       *y = wMtl1.getOrigin().y() * 100;
       *z = wMtl1.getOrigin().z() * 100;
       wMtl1.getBasis().getRPY(tmp_roll, tmp_pitch, tmp_yaw);
-      *roll = 0;
-      *pitch = 0;
-      *yaw = GetDiscreteYaw(tmp_yaw);
+      *roll = GetDiscreteRot(tmp_roll);
+      *pitch = GetDiscreteRot(tmp_pitch);
+      *yaw = GetDiscreteRot(tmp_yaw);
       pkt->SetDestAddr(5);
       pkt->SetSeq(l1seq++);
       pkt->PayloadUpdated(pdSize);
       buoy << pkt;
       Info("BUOY: TX TO {} SEQ {}", pkt->GetDestAddr(), pkt->GetSeq());
 
-      std::this_thread::sleep_for(chrono::seconds(5));
+      std::this_thread::sleep_for(chrono::seconds(4));
 
       targetPositionIndex++;
     }
@@ -826,14 +861,14 @@ void HIL2NetSimTracing::DoRun() {
       *y = position.getOrigin().y() * 100;
       *z = position.getOrigin().z() * 100;
       position.getBasis().getRPY(tmp_roll, tmp_pitch, tmp_yaw);
-      *roll = 0;
-      *pitch = 0;
-      *yaw = GetDiscreteYaw(tmp_yaw);
+      *roll = GetDiscreteRot(tmp_roll);
+      *pitch = GetDiscreteRot(tmp_pitch);
+      *yaw = GetDiscreteRot(tmp_yaw);
 
       pkt->SetSeq(seq++);
       pkt->PayloadUpdated(pdSize);
       leader1 << pkt;
-      Info("L1: TX TO {} SEQ {}", pkt->GetDestAddr(), pkt->GetDestAddr(),
+      Info("L1: TX TO {} SEQ {}", pkt->GetDestAddr(), pkt->GetSeq(),
            pkt->GetSeq());
 
       std::this_thread::sleep_for(chrono::seconds(5));
@@ -851,11 +886,11 @@ void HIL2NetSimTracing::DoRun() {
     while (true) {
       leader1 >> pkt;
       if (pkt->PacketIsOk()) {
-        // we have received the position of the buoy
+        // we have received the desired position from the buoy
         pos = tf::Vector3(*x / 100., *y / 100., *z / 100.);
-        droll = GetContinuousRPY(*roll);
-        dpitch = GetContinuousRPY(*pitch);
-        dyaw = GetContinuousRPY(*yaw);
+        droll = GetContinuousRot(*roll);
+        dpitch = GetContinuousRot(*pitch);
+        dyaw = GetContinuousRot(*yaw);
         rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw);
         uint32_t seq = pkt->GetSeq();
         Info("L1: RX FROM {} SEQ {} SIZE {} REQ: {} {} {} {} {} {}",
