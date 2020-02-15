@@ -26,25 +26,6 @@ HILNetSimTracing::HILNetSimTracing() : NetSimTracing() {
   e3_pub = node.advertise<geometry_msgs::TwistStamped>(
       "/uwsim/explorer3/velocity", 1);
 
-  leader_joint_pub = node.advertise<sensor_msgs::JointState>(
-      "/uwsim/leader/joint_state_command", 1);
-  follower_joint_pub = node.advertise<sensor_msgs::JointState>(
-      "/uwsim/follower/joint_state_command", 1);
-
-  leader_gled_pub =
-      node.advertise<underwater_sensor_msgs::LedLight>("/leader_leds/green", 1);
-  leader_rled_pub =
-      node.advertise<underwater_sensor_msgs::LedLight>("/leader_leds/red", 1);
-
-  follower_gled_pub = node.advertise<underwater_sensor_msgs::LedLight>(
-      "/follower_leds/green", 1);
-  follower_rled_pub =
-      node.advertise<underwater_sensor_msgs::LedLight>("/follower_leds/red", 1);
-  support_gled_pub = node.advertise<underwater_sensor_msgs::LedLight>(
-      "/support_leds/green", 1);
-  support_rled_pub =
-      node.advertise<underwater_sensor_msgs::LedLight>("/support_leds/red", 1);
-
   ledmsg.duration = ros::Duration(0.3);
 }
 
@@ -56,19 +37,6 @@ void HILNetSimTracing::PacketTransmitting(std::string path,
   Info("[{}] TX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
        dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
        header.GetPacketSize());
-
-  auto mac = dev->GetMac();
-  switch (mac) {
-  case 1:
-    support_rled_pub.publish(ledmsg);
-    break;
-  case 2:
-    leader_rled_pub.publish(ledmsg);
-    break;
-  case 3:
-    follower_rled_pub.publish(ledmsg);
-    break;
-  }
 }
 
 void HILNetSimTracing::PacketDropsUpdated(std::string path, uint32_t oldValue,
@@ -124,19 +92,6 @@ void HILNetSimTracing::PacketReceived(std::string path, ROSCommsDevicePtr dev,
   Info("[{}] RX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
        dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
        header.GetPacketSize());
-
-  auto mac = dev->GetMac();
-  switch (mac) {
-  case 1:
-    support_gled_pub.publish(ledmsg);
-    break;
-  case 2:
-    leader_gled_pub.publish(ledmsg);
-    break;
-  case 3:
-    follower_gled_pub.publish(ledmsg);
-    break;
-  }
 }
 
 void HILNetSimTracing::MacRx(std::string path, ROSCommsDevicePtr dev,
@@ -158,8 +113,8 @@ void HILNetSimTracing::MacTx(std::string path, ROSCommsDevicePtr dev,
 void HILNetSimTracing::ShowPosition(string path, ROSCommsDevicePtr dev,
                                     const tf::Vector3 &pos) {
 
-  Info("[{}] POS: {} {} {}", dev->GetMac(), pos.getX(), pos.getY(),
-       pos.getZ());
+  // Info("[{}] POS: {} {} {}", dev->GetMac(), pos.getX(), pos.getY(),
+  // pos.getZ());
 }
 
 void HILNetSimTracing::Configure() {
@@ -274,8 +229,8 @@ void HILNetSimTracing::DoRun() {
     static tf2_ros::StaticTransformBroadcaster static_broadcaster;
     geometry_msgs::TransformStamped static_transformStamped;
     std::vector<geometry_msgs::TransformStamped> static_transforms;
-    tf::StampedTransform wMe0, wMe1, wMe2, wMe3, wMpipe, e1Mte1, e2Mte2, e3Mte3;
-    tf::Transform e0Me1, e0Me2, e0Me3, wMeorig, eorigMe0target; //, pipeMe;
+    tf::StampedTransform nMe0, wMe1, wMe2, wMe3, e1Mte1, e2Mte2, e3Mte3, wMgte1,
+        wMgte2, wMgte3;
     geometry_msgs::TwistStamped explorer_msg;
     sensor_msgs::JointState joint_msg;
 
@@ -283,8 +238,6 @@ void HILNetSimTracing::DoRun() {
     rotation.setRPY(0, 0, 0);
 
     static_transformStamped.header.stamp = ros::Time::now();
-    static_transformStamped.header.frame_id = "erov_comms";
-    static_transformStamped.child_frame_id = "te1";
     static_transformStamped.transform.translation.x = 0;
     static_transformStamped.transform.translation.y = -1.5;
     static_transformStamped.transform.translation.z = 0;
@@ -292,11 +245,15 @@ void HILNetSimTracing::DoRun() {
     static_transformStamped.transform.rotation.y = rotation.y();
     static_transformStamped.transform.rotation.z = rotation.z();
     static_transformStamped.transform.rotation.w = rotation.w();
+
+    static_transformStamped.header.frame_id = "erov_comms";
+    static_transformStamped.child_frame_id = "te1";
+    static_transforms.push_back(static_transformStamped);
+    static_transformStamped.header.frame_id = "erov";
+    static_transformStamped.child_frame_id = "gte1";
     static_transforms.push_back(static_transformStamped);
 
     static_transformStamped.header.stamp = ros::Time::now();
-    static_transformStamped.header.frame_id = "erov_comms";
-    static_transformStamped.child_frame_id = "te2";
     static_transformStamped.transform.translation.x = -1.5;
     static_transformStamped.transform.translation.y = -1.5;
     static_transformStamped.transform.translation.z = 0;
@@ -304,11 +261,15 @@ void HILNetSimTracing::DoRun() {
     static_transformStamped.transform.rotation.y = rotation.y();
     static_transformStamped.transform.rotation.z = rotation.z();
     static_transformStamped.transform.rotation.w = rotation.w();
+
+    static_transformStamped.header.frame_id = "erov_comms";
+    static_transformStamped.child_frame_id = "te2";
+    static_transforms.push_back(static_transformStamped);
+    static_transformStamped.header.frame_id = "erov";
+    static_transformStamped.child_frame_id = "gte2";
     static_transforms.push_back(static_transformStamped);
 
     static_transformStamped.header.stamp = ros::Time::now();
-    static_transformStamped.header.frame_id = "erov_comms";
-    static_transformStamped.child_frame_id = "te3";
     static_transformStamped.transform.translation.x = -1.5;
     static_transformStamped.transform.translation.y = 0;
     static_transformStamped.transform.translation.z = 0;
@@ -316,18 +277,35 @@ void HILNetSimTracing::DoRun() {
     static_transformStamped.transform.rotation.y = rotation.y();
     static_transformStamped.transform.rotation.z = rotation.z();
     static_transformStamped.transform.rotation.w = rotation.w();
+
+    static_transformStamped.header.frame_id = "erov_comms";
+    static_transformStamped.child_frame_id = "te3";
+    static_transforms.push_back(static_transformStamped);
+    static_transformStamped.header.frame_id = "erov";
+    static_transformStamped.child_frame_id = "gte3";
     static_transforms.push_back(static_transformStamped);
 
     static_broadcaster.sendTransform(static_transforms);
     ros::Rate rate(10);
+
+    double error1, error2, error3, iserror1 = 0, iserror2 = 0, iserror3 = 0,
+                                   lroll, lpitch, lyaw;
 
     while (1) {
       try {
         listener.lookupTransform("explorer1", "te1", ros::Time(0), e1Mte1);
         listener.lookupTransform("explorer2", "te2", ros::Time(0), e2Mte2);
         listener.lookupTransform("explorer3", "te3", ros::Time(0), e3Mte3);
+        listener.lookupTransform("world", "gte1", ros::Time(0), wMgte1);
+        listener.lookupTransform("world", "gte2", ros::Time(0), wMgte2);
+        listener.lookupTransform("world", "gte3", ros::Time(0), wMgte3);
+        listener.lookupTransform("local_origin_ned", "erov", ros::Time(0),
+                                 nMe0);
+        listener.lookupTransform("world", "explorer1", ros::Time(0), wMe1);
+        listener.lookupTransform("world", "explorer2", ros::Time(0), wMe2);
+        listener.lookupTransform("world", "explorer3", ros::Time(0), wMe3);
       } catch (tf::TransformException &ex) {
-        Warn("TF: {}", ex.what());
+        // Warn("TF: {}", ex.what());
         continue;
       }
 
@@ -395,8 +373,13 @@ void HILNetSimTracing::DoRun() {
 
       e3_pub.publish(explorer_msg);
 
-      leader_joint_pub.publish(joint_msg);
-      follower_joint_pub.publish(joint_msg);
+      error1 = wMe1.getOrigin().distance(wMgte1.getOrigin());
+      error2 = wMe2.getOrigin().distance(wMgte2.getOrigin());
+      error3 = wMe3.getOrigin().distance(wMgte3.getOrigin());
+      nMe0.getBasis().getRPY(lroll, lpitch, lyaw);
+      Info("FERR: {} {} {} {} {} {} {}", error1, error2, error3,
+           nMe0.getOrigin().getX(), nMe0.getOrigin().getY(),
+           nMe0.getOrigin().getZ(), lyaw);
       rate.sleep();
     }
   });
